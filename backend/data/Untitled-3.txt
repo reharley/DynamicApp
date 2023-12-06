@@ -1,0 +1,134 @@
+{
+  "type": "object",
+  "properties": {
+    "ticket_types": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "colon": true,
+            "extra": "",
+            "help": "",
+            "hidden": false,
+            "initialValue": "",
+            "label": "ID",
+            "labelAlign": "left",
+            "required": true,
+            "rules": [],
+            "tooltip": ""
+          },
+          "workflow": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "colon": true,
+            "extra": "",
+            "help": "",
+            "hidden": false,
+            "initialValue": "",
+            "label": "ID",
+            "labelAlign": "left",
+            "required": true,
+            "rules": [],
+            "tooltip": ""
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "colon": true,
+                  "extra": "",
+                  "help": "",
+                  "hidden": false,
+                  "initialValue": "",
+                  "label": "ID",
+                  "labelAlign": "left",
+                  "required": true,
+                  "rules": [],
+                  "tooltip": ""
+                },
+                "label": {
+                  "type": "string",
+                  "colon": true,
+                  "extra": "",
+                  "help": "",
+                  "hidden": false,
+                  "initialValue": "",
+                  "label": "ID",
+                  "labelAlign": "left",
+                  "required": true,
+                  "rules": [],
+                  "tooltip": ""
+                },
+                "value": {
+                  "type": "string",
+                  "colon": true,
+                  "extra": "",
+                  "help": "",
+                  "hidden": false,
+                  "initialValue": "",
+                  "label": "ID",
+                  "labelAlign": "left",
+                  "required": true,
+                  "rules": [],
+                  "tooltip": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ticket_workflows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tickets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "type": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "ticket_types": [
+    {
+      "id": 1,
+      "workflow": 1,
+      "name": "Order Issue"
+    },
+    {
+      "id": 2,
+      "workflow": 3,
+      "name": "Payment Issue"
+    },
+    {
+      "id": 3,
+      "workflow": 2,
+      "name": "Delivery Issue"
+    },
+    {
+      "id": 4,
+      "workflow": 1,
+      "name": "Product Feedback"
+    }
+  ],
+  "cards": [
+    {
+      "title": "Card 1",
+      "fields": [
+        { "name": "field1", "label": "Field 1", "value": "" },
+        { "name": "field2", "label": "Field 2", "value": "" }
+      ]
+    },
+    {
+      "title": "Card 2",
+      "fields": [
+        { "name": "field3", "label": "Field 3", "value": "" },
+        { "name": "field4", "label": "Field 4", "value": "" }
+      ]
+    }
+  ],
+  "ticket_workflows": [
+    {
+      "id": 1,
+      "name": "New -> In Progress -> Resolved"
+    },
+    {
+      "id": 2,
+      "name": "Received -> Reviewed -> Closed"
+    },
+    {
+      "id": 3,
+      "name": "Submitted -> Investigated -> Completed"
+    }
+  ],
+  "testTexts": ["testing data"],
+  "tickets": [
+    {
+      "id": 101,
+      "type": 1,
+      "status": "In Progress",
+      "description": "Incorrect ice cream flavor delivered"
+    },
+    {
+      "id": 102,
+      "type": 2,
+      "status": "Resolved",
+      "description": "Overcharged for order"
+    },
+    {
+      "id": 103,
+      "type": 3,
+      "status": "In Progress",
+      "description": "Delivery arrived late"
+    },
+    {
+      "id": 104,
+      "type": 4,
+      "status": "Reviewed",
+      "description": "Great taste but needs more chocolate chips"
+    },
+    {
+      "type": 4,
+      "status": "Open",
+      "description": "I loved the banilla! Just the right amount of banana and vanilla :)",
+      "id": 105
+    }
+  ]
+}
