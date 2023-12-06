@@ -146,6 +146,19 @@ exports.getTicketWorkflows = (req, res) => {
   res.json(data.ticket_workflows);
 };
 
+exports.handleData = (req, res) => {
+  const dataPath = "./data/data.json";
+  if (req.method === "GET") {
+    const data = fs.readFileSync(dataPath);
+    res.json(JSON.parse(data));
+  } else if (req.method === "POST") {
+    fs.writeFileSync(dataPath, JSON.stringify(req.body, null, 4));
+    res.json({ message: "Data saved successfully" });
+  } else {
+    res.status(405).json({ message: "Method not allowed" });
+  }
+};
+
 exports.createTicketWorkflow = (req, res) => {
   const data = readData();
   const newTicketWorkflow = {

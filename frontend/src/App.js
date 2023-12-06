@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import TicketManager from "./components/TicketManager";
 import TicketTypeManager from "./components/TicketTypeManager";
-// import TicketWorkflowList from "./components/TicketWorkflowList";
 import ticketService from "./services/ticketService";
 import TicketQueue from "./components/TicketQueue";
 import DynamicForm from "./components/DynamicForm";
+
 import { buildSchema } from "./utils/schema";
+
+import data from "./data/data.json";
 
 const App = () => {
   const [tickets, setTickets] = useState([]);
@@ -36,30 +38,12 @@ const App = () => {
     };
     fetchTicketWorkflows();
   }, []);
-
-  let data = {
-    cards: [
-      {
-        title: "Card 1",
-        fields: [
-          { name: "field1", label: "Field 1", value: "" },
-          { name: "field2", label: "Field 2", value: "" },
-        ],
-      },
-      {
-        title: "Card 2",
-        fields: [
-          { name: "field3", label: "Field 3", value: "" },
-          { name: "field4", label: "Field 4", value: "" },
-        ],
-      },
-    ],
-  };
-  data = data.cards;
+  let thing = data;
+  console.log(buildSchema(thing), thing);
   return (
     <div>
       <p>this</p>
-      <DynamicForm schema={buildSchema(data)} dataList={data} />
+      <DynamicForm schema={buildSchema(thing)} dataList={thing} />
       <h1>Tickets</h1>
       <TicketManager
         tickets={tickets}

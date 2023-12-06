@@ -13,7 +13,8 @@ import {
 
 const DynamicForm = ({ schema, dataList }) => {
   const [form] = Form.useForm();
-  const renderField = (field, namePath) => {
+  const renderField = (field, namePath, restField) => {
+    console.log("first", field, namePath, restField);
     const name = namePath[namePath.length - 1];
     let dynamicField = <React.Fragment />;
     switch (field.type) {
@@ -35,6 +36,7 @@ const DynamicForm = ({ schema, dataList }) => {
     return (
       <Form.Item
         name={[...namePath]}
+        {...restField}
         label={name}
         rules={[{ required: field.required }]}
       >
@@ -43,34 +45,37 @@ const DynamicForm = ({ schema, dataList }) => {
     );
   };
 
-  const renderFields = (schema, namePath = []) => {
+  const renderFields = (schema, namePath = [], restField) => {
+    console.log("fields", schema, namePath);
     if (schema.type === "array") {
       const itemName = namePath[namePath.length - 1];
       return (
-        <Form.List>
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name }) => (
-                <Card
-                  key={key}
-                  title={itemName}
-                  extra={
-                    <Button type="link" onClick={() => remove(name)}>
-                      Delete
-                    </Button>
-                  }
-                >
-                  <Space>
-                    {renderFields(schema.items, [...namePath, name])}
-                  </Space>
-                </Card>
-              ))}
-              <Button type="dashed" onClick={() => add()}>
-                Add {itemName}
-              </Button>
-            </>
-          )}
-        </Form.List>
+        <Form.Item name={[...namePath]}>
+          <Form.List>
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Card
+                    key={key}
+                    title={itemName}
+                    extra={
+                      <Button type="link" onClick={() => remove(name)}>
+                        Delete
+                      </Button>
+                    }
+                  >
+                    <Space>
+                      {renderFields(schema.items, [...namePath, name])}
+                    </Space>
+                  </Card>
+                ))}
+                <Button type="dashed" onClick={() => add()}>
+                  Add {itemName}
+                </Button>
+              </>
+            )}
+          </Form.List>
+        </Form.Item>
       );
     } else if (schema.type === "object") {
       return (
@@ -86,9 +91,11 @@ const DynamicForm = ({ schema, dataList }) => {
         </Card>
       );
     } else {
-      return renderField(schema, [...namePath]);
+      console.log("else", schema, namePath, restField);
+      return renderField(schema, [...namePath], restField);
     }
   };
+
   const onFinish = (values) => {
     console.log("Received values:", values);
   };

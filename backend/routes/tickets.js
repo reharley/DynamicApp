@@ -20,4 +20,6 @@ router.post("/ticket_workflows", ticketsController.createTicketWorkflow);
 router.put("/ticket_workflows/:id", ticketsController.updateTicketWorkflow);
 router.delete("/ticket_workflows/:id", ticketsController.deleteTicketWorkflow);
 
+router.route("/data").all(ticketsController.handleData);
+
 module.exports = router;

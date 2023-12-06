@@ -1,0 +1,81 @@
+{
+  "antd": {
+    "General": [
+      { "name": "Button" },
+      { "name": "Icon" },
+      { "name": "Typography" }
+    ],
+    "Layout": [
+      { "name": "Divider" },
+      { "name": "Grid" },
+      { "name": "Layout" },
+      { "name": "Space" }
+    ],
+    "Navigation": [
+      { "name": "Affix" },
+      { "name": "Breadcrumb" },
+      { "name": "Dropdown" },
+      { "name": "Menu" },
+      { "name": "Pagination" },
+      { "name": "PageHeader" },
+      { "name": "Steps" }
+    ],
+    "DataEntry": [
+      { "name": "AutoComplete" },
+      { "name": "Cascader" },
+      { "name": "Checkbox" },
+      { "name": "DatePicker" },
+      { "name": "Form" },
+      { "name": "Input" },
+      { "name": "InputNumber" },
+      { "name": "Mentions" },
+      { "name": "Radio" },
+      { "name": "Rate" },
+      { "name": "Select" },
+      { "name": "Slider" },
+      { "name": "Switch" },
+      { "name": "TimePicker" },
+      { "name": "Transfer" },
+      { "name": "TreeSelect" },
+      { "name": "Upload" }
+    ],
+    "DataDisplay": [
+      { "name": "Avatar" },
+      { "name": "Badge" },
+      { "name": "Calendar" },
+      { "name": "Card" },
+      { "name": "Carousel" },
+      { "name": "Collapse" },
+      { "name": "Comment" },
+      { "name": "Descriptions" },
+      { "name": "Empty" },
+      { "name": "Image" },
+      { "name": "List" },
+      { "name": "Popover" },
+      { "name": "Statistic" },
+      { "name": "Table" },
+      { "name": "Tabs" },
+      { "name": "Tag" },
+      { "name": "Timeline" },
+      { "name": "Tooltip" },
+      { "name": "Tree" }
+    ],
+    "Feedback": [
+      { "name": "Alert" },
+      { "name": "Drawer" },
+      { "name": "Modal" },
+      { "name": "Message" },
+      { "name": "Notification" },
+      { "name": "Popconfirm" },
+      { "name": "Progress" },
+      { "name": "Result" },
+      { "name": "Skeleton" },
+      { "name": "Spin" }
+    ],
+    "Other": [
+      { "name": "Anchor" },
+      { "name": "BackTop" },
+      { "name": "ConfigProvider" }
+    ]
+  }
+}
