@@ -1,0 +1,38 @@
+[
+  {
+    "PersonaName": "Emily Nguyen",
+    "Age": 29,
+    "Occupation": "Graphic Designer",
+    "Location": "San Francisco, California",
+    "TechSavviness": "Moderately tech-savvy",
+    "ReadingPreferences": "Enjoys contemporary fiction and design books",
+    "PrimaryGoals": [
+      "Discover new books based on her interests",
+      "Read reviews to make informed choices",
+      "Conveniently purchase and track orders"
+    ],
+    "UsagePatterns": "Frequently browses on her mobile during commutes",
+    "PainPoints": [
+      "Often has limited time to browse",
+      "Needs easy navigation to find books quickly"
+    ]
+  },
+  {
+    "PersonaName": "John Smith",
+    "Age": 42,
+    "Occupation": "High School English Teacher",
+    "Location": "Austin, Texas",
+    "TechSavviness": "Basic tech skills",
+    "ReadingPreferences": "Prefers classic literature and historical non-fiction",
+    "PrimaryGoals": [
+      "Search for specific authors and titles",
+      "Find teaching resources and bulk order options",
+      "Access detailed book information and reviews"
+    ],
+    "UsagePatterns": "Mainly uses desktop for in-depth browsing and purchases",
+    "PainPoints": [
+      "Needs an interface that is easy to navigate without advanced tech knowledge",
+      "Requires accurate and comprehensive book information"
+    ]
+  }
+]

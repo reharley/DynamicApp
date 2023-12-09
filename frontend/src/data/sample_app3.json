@@ -1,0 +1,137 @@
+{
+  "app": {
+    "type": "Layout",
+    "properties": {
+      "style": { "layout": "vertical" },
+      "children": [
+        {
+          "type": "Header",
+          "properties": {
+            "title": "Project Dashboard",
+            "menu": [
+              { "name": "Home", "link": "/" },
+              { "name": "Projects", "link": "/projects" },
+              { "name": "Teams", "link": "/teams" },
+              { "name": "Reports", "link": "/reports" }
+            ]
+          }
+        },
+        {
+          "type": "Content",
+          "properties": {
+            "style": { "padding": "24px" },
+            "children": [
+              {
+                "type": "Row",
+                "properties": {
+                  "gutter": 16,
+                  "children": [
+                    {
+                      "type": "Col",
+                      "span": 12,
+                      "children": [
+                        {
+                          "type": "Card",
+                          "title": "New Project Entry",
+                          "children": [
+                            {
+                              "type": "Form",
+                              "properties": {
+                                "layout": "vertical",
+                                "items": [
+                                  { "label": "Project Name", "type": "Input" },
+                                  {
+                                    "label": "Start Date",
+                                    "type": "DatePicker"
+                                  },
+                                  { "label": "End Date", "type": "DatePicker" },
+                                  {
+                                    "label": "Status",
+                                    "type": "Select",
+                                    "options": [
+                                      "Planning",
+                                      "Active",
+                                      "Completed"
+                                    ]
+                                  },
+                                  { "label": "Description", "type": "TextArea" }
+                                ],
+                                "submitButton": "Submit"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Col",
+                      "span": 12,
+                      "children": [
+                        {
+                          "type": "Card",
+                          "title": "Project Overview",
+                          "children": [
+                            {
+                              "type": "Table",
+                              "properties": {
+                                "columns": [
+                                  {
+                                    "title": "Name",
+                                    "dataIndex": "name",
+                                    "key": "name"
+                                  },
+                                  {
+                                    "title": "Status",
+                                    "dataIndex": "status",
+                                    "key": "status"
+                                  },
+                                  {
+                                    "title": "Start Date",
+                                    "dataIndex": "startDate",
+                                    "key": "startDate"
+                                  },
+                                  {
+                                    "title": "End Date",
+                                    "dataIndex": "endDate",
+                                    "key": "endDate"
+                                  }
+                                ],
+                                "dataSource": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "Footer",
+          "properties": {
+            "text": "© 2023 Project Management Dashboard"
+          }
+        },
+        {
+          "type": "Modal",
+          "properties": {
+            "title": "Notification",
+            "content": "Your changes have been saved."
+          }
+        }
+      ]
+    },
+    "navigation": {
+      "type": "Breadcrumb",
+      "properties": {
+        "items": [
+          { "name": "Home", "link": "/" },
+          { "name": "Projects", "link": "/projects" }
+        ]
+      }
+    }
+  }
+}

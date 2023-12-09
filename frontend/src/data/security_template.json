@@ -1,0 +1,43 @@
+{
+  "ProjectName": "Online Bookstore App - Security Requirements",
+  "DataSensitivity_Compliance": {
+    "DataTypes": "Personal user data (names, addresses), payment details (credit card information), browsing history",
+    "Regulations": "GDPR for European users, PCI DSS for payment processing"
+  },
+  "UserAuthentication_Authorization": {
+    "AccessLevels": "Customer accounts, admin accounts for staff, guest browsing",
+    "AuthenticationMethods": "Email and password, optional two-factor authentication for admin accounts"
+  },
+  "Network_InfrastructureSecurity": {
+    "Hosting": "Cloud-based hosting on AWS",
+    "SecurityMeasures": "Firewalls, AWS WAF for intrusion detection, regular network scans"
+  },
+  "DataEncryption_Storage": {
+    "Encryption": "TLS for data in transit, AES-256 encryption for data at rest",
+    "StorageStrategy": "Encrypted database storage, regular data backups"
+  },
+  "ApplicationSecurity": {
+    "ProtectionMethods": "Input validation, CSRF tokens, prepared statements for SQL queries",
+    "SecurityAudits": "Annual third-party security audits, monthly vulnerability scans"
+  },
+  "IncidentResponse_DisasterRecovery": {
+    "IncidentResponsePlan": "Dedicated team for incident response, predefined procedures for different types of breaches",
+    "DisasterRecovery": "Data backups in multiple geographic locations, rapid failover capabilities"
+  },
+  "SDLC_SecurityIntegration": {
+    "SecurityInSDLC": "Security review in each phase of SDLC, mandatory code reviews",
+    "DevelopmentPractices": "Static code analysis, regular security training for developers"
+  },
+  "ThirdParty_Integrations_VendorManagement": {
+    "IntegrationSecurity": "OAuth for secure API integrations, regular security assessments of third-party services",
+    "VendorManagement": "Strict vendor security standards, periodic review of vendor compliance"
+  },
+  "UserEducation_Awareness": {
+    "TrainingPrograms": "Annual security training for staff, regular security awareness communications to users",
+    "UserPolicyCommunication": "Clear privacy policy, security guidelines communicated via email and in-app notifications"
+  },
+  "Compliance_AuditRequirements": {
+    "IndustryStandards": "ISO 27001 compliance, regular SOC 2 Type II audits",
+    "ComplianceMonitoring": "Continuous monitoring, compliance reporting tools integrated with cloud services"
+  }
+}
