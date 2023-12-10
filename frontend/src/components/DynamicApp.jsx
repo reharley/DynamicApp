@@ -9,17 +9,18 @@ import {
   Form,
   Input,
   DatePicker,
+  Button,
   Select,
-  TextArea,
   Table,
   Modal,
 } from "antd";
 import appJSON from "../data/sample_app3.json";
-
+const { TextArea } = Input;
 const { Header, Content, Footer } = Layout;
 const { Option } = Select;
 
 const renderComponent = (component) => {
+  console.log(component);
   switch (component.type) {
     case "Layout":
       return (
@@ -102,8 +103,8 @@ const renderComponent = (component) => {
             }
           })}
           <Form.Item>
-            <Button type="primary" htmlType="submit">
-              {component.properties.submitButton}
+            <Button {...component.properties.submitButton.properties}>
+              {component.properties.submitButton.properties.text}
             </Button>
           </Form.Item>
         </Form>
@@ -138,8 +139,8 @@ const renderComponent = (component) => {
   }
 };
 
-const App = () => {
+const DynamicApp = () => {
   return renderComponent(appJSON.app);
 };
 
-export default App;
+export default DynamicApp;

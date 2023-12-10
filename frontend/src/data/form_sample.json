@@ -1,0 +1,82 @@
+{
+  "type": "Form",
+  "properties": {
+    "layout": "vertical",
+    "items": [
+      {
+        "label": "Project ID",
+        "type": "Input",
+        "properties": {
+          "style": { "display": "none" },
+          "defaultValue": "Generated or Predefined ID"
+        }
+      },
+      {
+        "label": "Project Name",
+        "type": "Input",
+        "rules": [
+          { "required": true, "message": "Please input the project name!" }
+        ]
+      },
+      {
+        "label": "Start Date",
+        "type": "DatePicker",
+        "rules": [
+          { "required": true, "message": "Please select the start date!" }
+        ],
+        "properties": {
+          "onChange": "updateEndDateRestriction"
+        }
+      },
+      {
+        "label": "End Date",
+        "type": "DatePicker",
+        "rules": [
+          { "required": true, "message": "Please select the end date!" }
+        ],
+        "properties": {
+          "disabledDate": "disableBeforeStartDate"
+        }
+      },
+      {
+        "label": "Status",
+        "type": "Select",
+        "options": ["Planning", "Active", "Completed"],
+        "rules": [{ "required": true, "message": "Please select the status!" }]
+      },
+      {
+        "label": "Description",
+        "type": "TextArea",
+        "rules": [
+          { "required": true, "message": "Please input the description!" }
+        ]
+      }
+    ],
+    "submitButton": {
+      "type": "Button",
+      "properties": {
+        "type": "primary",
+        "htmlType": "submit",
+        "text": "Submit"
+      }
+    }
+  },
+  "functions": {
+    "updateEndDateRestriction": {
+      "description": "This function is triggered when the start date changes. It should update the state or context to reflect the new start date, ensuring the end date cannot be before the start date.",
+      "steps": [
+        "Retrieve the selected start date value.",
+        "Update the state or context to hold this value.",
+        "In the end date picker, ensure dates before the new start date are disabled."
+      ]
+    },
+    "disableBeforeStartDate": {
+      "description": "This function determines which dates in the end date picker are disabled. It should disable all dates that are before the selected start date.",
+      "steps": [
+        "Check if the current date in the date picker is before the start date stored in state or context.",
+        "If it is before the start date, return true to disable this date.",
+        "If it is the start date or later, return false."
+      ]
+    }
+  }
+}
