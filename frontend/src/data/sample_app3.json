@@ -1,218 +1,274 @@
 {
   "app": {
     "type": "Layout",
+    "name": "mainLayout",
     "properties": {
-      "style": { "layout": "vertical" },
-      "children": [
-        {
-          "type": "Header",
-          "properties": {
+      "style": { "layout": "vertical" }
+    },
+    "children": [
+      {
+        "type": "Header",
+        "name": "mainHeader",
+        "properties": {},
+        "children": [
+          {
+            "type": "Menu",
+            "name": "mainMenu",
+            "properties": {
+              "theme": "dark",
+              "mode": "horizontal",
+              "defaultSelectedKeys": ["Home"]
+            },
             "children": [
               {
-                "type": "Menu",
+                "type": "MenuItem",
+                "name": "menuItemHome",
                 "properties": {
-                  "theme": "dark",
-                  "mode": "horizontal",
-                  "defaultSelectedKeys": ["Home"]
+                  "key": "Home",
+                  "link": "/"
                 },
-                "items": [
-                  { "name": "Home", "link": "/" },
-                  { "name": "Projects", "link": "/projects" },
-                  { "name": "Teams", "link": "/teams" },
-                  { "name": "Reports", "link": "/reports" }
+                "text": "Home"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemProjects",
+                "properties": {
+                  "key": "Projects",
+                  "link": "/projects"
+                },
+                "text": "Projects"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemTeams",
+                "properties": {
+                  "key": "Teams",
+                  "link": "/teams"
+                },
+                "text": "Teams"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemReports",
+                "properties": {
+                  "key": "Reports",
+                  "link": "/reports"
+                },
+                "text": "Reports"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Content",
+        "name": "mainContent",
+        "properties": {
+          "style": { "padding": "24px" }
+        },
+        "children": [
+          {
+            "type": "Row",
+            "name": "mainRow",
+            "properties": {
+              "gutter": 16
+            },
+            "children": [
+              {
+                "type": "Col",
+                "name": "leftColumn",
+                "properties": {
+                  "span": 12
+                },
+                "children": [
+                  {
+                    "type": "Card",
+                    "name": "newProjectCard",
+                    "properties": {
+                      "title": "New Project Entry"
+                    },
+                    "children": [
+                      {
+                        "type": "Form",
+                        "name": "newProjectForm",
+                        "properties": {
+                          "layout": "vertical",
+                          "onSubmit": "submitObject",
+                          "items": [
+                            {
+                              "label": "Project ID",
+                              "type": "Input",
+                              "properties": {
+                                "name": "projectId",
+                                "style": { "display": "none" },
+                                "defaultValue": "Generated or Predefined ID"
+                              }
+                            },
+                            {
+                              "label": "Project Name",
+                              "type": "Input",
+                              "properties": {
+                                "name": "projectName"
+                              },
+                              "rules": [
+                                {
+                                  "required": true,
+                                  "message": "Please input the project name!"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "Start Date",
+                              "type": "DatePicker",
+                              "properties": {
+                                "name": "startDate",
+                                "onChange": "updateEndDateRestriction"
+                              },
+                              "rules": [
+                                {
+                                  "required": true,
+                                  "message": "Please select the start date!"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "End Date",
+                              "type": "DatePicker",
+                              "properties": {
+                                "name": "endDate"
+                              },
+                              "rules": [
+                                {
+                                  "required": true,
+                                  "message": "Please select the end date!"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "Status",
+                              "type": "Select",
+                              "properties": {
+                                "name": "status"
+                              },
+                              "options": ["Planning", "Active", "Completed"],
+                              "rules": [
+                                {
+                                  "required": true,
+                                  "message": "Please select the status!"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "Description",
+                              "type": "TextArea",
+                              "properties": {
+                                "name": "description"
+                              },
+                              "rules": [
+                                {
+                                  "required": true,
+                                  "message": "Please input the description!"
+                                }
+                              ]
+                            }
+                          ],
+                          "submitButton": {
+                            "type": "Button",
+                            "name": "submitNewProjectButton",
+                            "properties": {
+                              "type": "primary",
+                              "htmlType": "submit",
+                              "text": "Submit",
+                              "name": "submitButton"
+                            }
+                          }
+                        },
+                        "functions": {
+                          "updateEndDateRestriction": {
+                            "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "Col",
+                "name": "rightColumn",
+                "properties": {
+                  "span": 12
+                },
+                "children": [
+                  {
+                    "type": "Card",
+                    "name": "projectOverviewCard",
+                    "properties": {
+                      "title": "Project Overview"
+                    },
+                    "children": [
+                      {
+                        "type": "Table",
+                        "name": "projectOverviewTable",
+                        "properties": {
+                          "columns": [
+                            {
+                              "title": "Name",
+                              "dataIndex": "projectName",
+                              "key": "name"
+                            },
+                            {
+                              "title": "Status",
+                              "dataIndex": "status",
+                              "key": "status"
+                            },
+                            {
+                              "title": "Start Date",
+                              "dataIndex": "startDate",
+                              "key": "startDate"
+                            },
+                            {
+                              "title": "End Date",
+                              "dataIndex": "endDate",
+                              "key": "endDate"
+                            }
+                          ],
+                          "dataSource": []
+                        },
+                        "onInit": "loadProjectData",
+                        "functions": {
+                          "loadProjectData": {
+                            "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
+                          }
+                        }
+                      }
+                    ]
+                  }
                 ]
               }
             ]
           }
-        },
-        {
-          "type": "Content",
-          "properties": {
-            "style": { "padding": "24px" },
-            "children": [
-              {
-                "type": "Row",
-                "properties": {
-                  "gutter": 16,
-                  "children": [
-                    {
-                      "type": "Col",
-                      "span": 12,
-                      "children": [
-                        {
-                          "type": "Card",
-                          "title": "New Project Entry",
-                          "children": [
-                            {
-                              "type": "Form",
-                              "properties": {
-                                "layout": "vertical",
-                                "onSubmit": "submitObject",
-                                "items": [
-                                  {
-                                    "label": "Project ID",
-                                    "type": "Input",
-                                    "properties": {
-                                      "name": "projectId",
-                                      "style": { "display": "none" },
-                                      "defaultValue": "Generated or Predefined ID"
-                                    }
-                                  },
-                                  {
-                                    "label": "Project Name",
-                                    "type": "Input",
-                                    "properties": {
-                                      "name": "projectName"
-                                    },
-                                    "rules": [
-                                      {
-                                        "required": true,
-                                        "message": "Please input the project name!"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "label": "Start Date",
-                                    "type": "DatePicker",
-                                    "properties": {
-                                      "name": "startDate",
-                                      "onChange": "updateEndDateRestriction"
-                                    },
-                                    "rules": [
-                                      {
-                                        "required": true,
-                                        "message": "Please select the start date!"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "label": "End Date",
-                                    "type": "DatePicker",
-                                    "properties": {
-                                      "name": "endDate"
-                                    },
-                                    "rules": [
-                                      {
-                                        "required": true,
-                                        "message": "Please select the end date!"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "label": "Status",
-                                    "type": "Select",
-                                    "properties": {
-                                      "name": "status"
-                                    },
-                                    "options": [
-                                      "Planning",
-                                      "Active",
-                                      "Completed"
-                                    ],
-                                    "rules": [
-                                      {
-                                        "required": true,
-                                        "message": "Please select the status!"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "label": "Description",
-                                    "type": "TextArea",
-                                    "properties": {
-                                      "name": "description"
-                                    },
-                                    "rules": [
-                                      {
-                                        "required": true,
-                                        "message": "Please input the description!"
-                                      }
-                                    ]
-                                  }
-                                ],
-                                "submitButton": {
-                                  "type": "Button",
-                                  "properties": {
-                                    "type": "primary",
-                                    "htmlType": "submit",
-                                    "text": "Submit",
-                                    "name": "submitButton"
-                                  }
-                                }
-                              },
-                              "functions": {
-                                "updateEndDateRestriction": {
-                                  "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
-                                }
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "Col",
-                      "span": 12,
-                      "children": [
-                        {
-                          "type": "Card",
-                          "title": "Project Overview",
-                          "children": [
-                            {
-                              "type": "Table",
-                              "properties": {
-                                "columns": [
-                                  {
-                                    "title": "Name",
-                                    "dataIndex": "name",
-                                    "key": "name"
-                                  },
-                                  {
-                                    "title": "Status",
-                                    "dataIndex": "status",
-                                    "key": "status"
-                                  },
-                                  {
-                                    "title": "Start Date",
-                                    "dataIndex": "startDate",
-                                    "key": "startDate"
-                                  },
-                                  {
-                                    "title": "End Date",
-                                    "dataIndex": "endDate",
-                                    "key": "endDate"
-                                  }
-                                ],
-                                "dataSource": []
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "Footer",
-          "properties": {
-            "text": "© 2023 Project Management Dashboard"
-          }
-        },
-        {
-          "type": "Modal",
-          "properties": {
-            "title": "Notification",
-            "content": "Your changes have been saved."
-          }
+        ]
+      },
+      {
+        "type": "Footer",
+        "name": "mainFooter",
+        "properties": {
+          "text": "© 2023 Project Management Dashboard"
         }
-      ]
-    },
+      },
+      {
+        "type": "Modal",
+        "name": "notificationModal",
+        "properties": {
+          "title": "Notification",
+          "content": "Your changes have been saved."
+        }
+      }
+    ],
     "navigation": {
       "type": "Breadcrumb",
+      "name": "mainBreadcrumb",
       "properties": {
         "items": [
           { "name": "Home", "link": "/" },

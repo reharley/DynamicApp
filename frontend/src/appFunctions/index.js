@@ -1,7 +1,7 @@
 // appFunctions/index.js
 import objectService from "../services/objectService";
 
-export function updateEndDateRestriction(form, fieldConfig) {
+export function updateEndDateRestriction(form, fieldConfig, appState) {
   const startDate = form.getFieldValue("startDate");
   const endDate = form.getFieldValue("endDate");
 
@@ -29,7 +29,7 @@ export function updateEndDateRestriction(form, fieldConfig) {
   ]);
 }
 
-export const submitObject = async (values) => {
+export const submitObject = async (values, appState) => {
   try {
     if (values.projectId) {
       // If projectId exists, it's an update operation
@@ -42,5 +42,16 @@ export const submitObject = async (values) => {
   } catch (error) {
     // Handle errors (e.g., show error message)
     console.error("Error submitting form:", error);
+  }
+};
+
+export const loadProjectData = async (appState) => {
+  try {
+    console.log("loadProjectData");
+    const projects = await objectService.getAllObjects();
+    appState.changeComponent("projectOverviewTable", { dataSource: projects });
+  } catch (error) {
+    console.error("Error loading project data:", error);
+    // Handle errors (e.g., show error message)
   }
 };

@@ -5,7 +5,7 @@ import * as appFunctions from "../appFunctions";
 const { Option } = Select;
 const { TextArea } = Input;
 
-const DynamicForm = ({ component }) => {
+const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
   return (
     <Form
@@ -24,7 +24,11 @@ const DynamicForm = ({ component }) => {
             fieldConfig.properties.onChange &&
             appFunctions[fieldConfig.properties.onChange]
           ) {
-            appFunctions[fieldConfig.properties.onChange](form, fieldConfig);
+            appFunctions[fieldConfig.properties.onChange](
+              form,
+              fieldConfig,
+              appState
+            );
           }
         });
       }}

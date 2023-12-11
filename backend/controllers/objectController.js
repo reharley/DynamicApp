@@ -14,11 +14,13 @@ const writeData = (data) => {
 
 // CRUD operations
 exports.getAllObjects = (req, res) => {
+  console.log("getAllObjects");
   const data = readData();
   res.json(data);
 };
 
 exports.createObject = (req, res) => {
+  console.log("createObject");
   const newObject = req.body; // Assuming the new object data is sent in the request body
 
   // Read existing data
@@ -39,6 +41,7 @@ exports.createObject = (req, res) => {
 };
 
 exports.updateObject = (req, res) => {
+  console.log("updateObject");
   const objectId = req.params.id; // Assuming the object ID is sent as a URL parameter
   const updatedObject = req.body; // Assuming the updated object data is sent in the request body
 
@@ -69,6 +72,7 @@ exports.updateObject = (req, res) => {
 };
 
 exports.deleteObject = (req, res) => {
+  console.log("deleteObject");
   const objectId = req.params.id; // Assuming the object ID is sent as a URL parameter
 
   // Read existing data
