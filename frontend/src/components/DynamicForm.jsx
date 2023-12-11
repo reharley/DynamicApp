@@ -19,6 +19,7 @@ const DynamicForm = ({ component, appState }) => {
       appState.setFormInstance(component.name, null);
     };
   }, []);
+
   const renderFormItem = (item) => {
     // Switch statement to render form input based on type
     const formInput = (() => {
@@ -43,14 +44,9 @@ const DynamicForm = ({ component, appState }) => {
           return null;
       }
     })();
-    console.log("item", item);
+
     return (
-      <Form.Item
-        key={item.name}
-        name={item.name}
-        label={item.label}
-        rules={item.rules}
-      >
+      <Form.Item {...item} key={item.name}>
         {formInput}
       </Form.Item>
     );
@@ -64,7 +60,6 @@ const DynamicForm = ({ component, appState }) => {
         appFunctions[component.properties.onSubmit](values, appState)
       }
       onFieldsChange={(changedFields, allFields) => {
-        console.log("changedFields", changedFields, allFields);
         changedFields.forEach((field) => {
           const fieldName = field.name[field.name.length - 1];
           // Check if the changed field has a linked function and execute it
