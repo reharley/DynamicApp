@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const ticketsRoutes = require("./routes/tickets");
+const objectRoutes = require("./routes/objects");
 
 const app = express();
 
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Enable JSON body parsing for all routes
 
-app.use("/api", ticketsRoutes); // Use the tickets routes for all /api routes
+app.use("/api", objectRoutes); // Use the tickets routes for all /api routes
 
 const port = 3001;
 app.listen(port, () => {

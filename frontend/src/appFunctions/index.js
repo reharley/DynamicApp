@@ -1,3 +1,6 @@
+// appFunctions/index.js
+import objectService from "../services/objectService";
+
 export function updateEndDateRestriction(form, fieldConfig) {
   const startDate = form.getFieldValue("startDate");
   const endDate = form.getFieldValue("endDate");
@@ -25,3 +28,19 @@ export function updateEndDateRestriction(form, fieldConfig) {
     },
   ]);
 }
+
+export const submitObject = async (values) => {
+  try {
+    if (values.projectId) {
+      // If projectId exists, it's an update operation
+      await objectService.updateObject(values.projectId, values);
+    } else {
+      // If projectId does not exist, it's a create operation
+      await objectService.createObject(values);
+    }
+    // Handle successful operation (e.g., show notification, redirect, etc.)
+  } catch (error) {
+    // Handle errors (e.g., show error message)
+    console.error("Error submitting form:", error);
+  }
+};

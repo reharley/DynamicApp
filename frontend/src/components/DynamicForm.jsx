@@ -11,6 +11,7 @@ const DynamicForm = ({ component }) => {
     <Form
       form={form}
       layout={component.properties.layout}
+      onFinish={appFunctions[component.properties.onSubmit]}
       onFieldsChange={(changedFields, allFields) => {
         changedFields.forEach((field) => {
           const fieldName = field.name[field.name.length - 1];
@@ -64,7 +65,7 @@ const DynamicForm = ({ component }) => {
       })}
       <Form.Item>
         <Button {...component.properties.submitButton.properties}>
-          {component.properties.submitButton.properties.text + 3}
+          {component.properties.submitButton.properties.text}
         </Button>
       </Form.Item>
     </Form>

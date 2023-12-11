@@ -13,8 +13,15 @@
     },
     {
       "command": "npm start",
+      "cwd": "${workspaceFolder}/backend",
+      "name": "backend",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm start",
       "cwd": "${workspaceFolder}/frontend",
-      "name": "Run npm start",
+      "name": "frontend",
       "request": "launch",
       "type": "node-terminal"
     },
