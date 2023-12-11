@@ -1,125 +1,72 @@
 import React from "react";
-import {
-  Form,
-  Space,
-  Input,
-  InputNumber,
-  DatePicker,
-  Checkbox,
-  Button,
-  Card,
-  Switch,
-} from "antd";
+import { Form, Input, DatePicker, Button, Select } from "antd";
+import * as appFunctions from "../appFunctions";
 
-const DynamicForm = ({ schema, dataList }) => {
+const { Option } = Select;
+const { TextArea } = Input;
+
+const DynamicForm = ({ component }) => {
   const [form] = Form.useForm();
-  const renderField = (field, namePath, restField) => {
-    console.log("first", field, namePath, restField);
-    const name = namePath[namePath.length - 1];
-    let dynamicField = <React.Fragment />;
-    switch (field.type) {
-      case "string":
-        dynamicField = <Input />;
-        break;
-      case "number":
-        dynamicField = <InputNumber />;
-        break;
-
-      case "date":
-        dynamicField = <DatePicker />;
-        break;
-
-      case "boolean":
-        dynamicField = <Switch />;
-        break;
-    }
-    return (
-      <Form.Item
-        name={[...namePath]}
-        {...restField}
-        label={name}
-        rules={[{ required: field.required }]}
-      >
-        {dynamicField}
-      </Form.Item>
-    );
-  };
-
-  const renderFields = (schema, namePath = [], restField) => {
-    console.log("fields", schema, namePath);
-    if (schema.type === "array") {
-      const itemName = namePath[namePath.length - 1];
-      return (
-        <Form.Item name={[...namePath]}>
-          <Form.List>
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Card
-                    key={key}
-                    title={itemName}
-                    extra={
-                      <Button type="link" onClick={() => remove(name)}>
-                        Delete
-                      </Button>
-                    }
-                  >
-                    <Space>
-                      {renderFields(schema.items, [...namePath, name])}
-                    </Space>
-                  </Card>
-                ))}
-                <Button type="dashed" onClick={() => add()}>
-                  Add {itemName}
-                </Button>
-              </>
-            )}
-          </Form.List>
-        </Form.Item>
-      );
-    } else if (schema.type === "object") {
-      return (
-        <Card
-          key={namePath.join(".")}
-          // title={name}
-        >
-          {/* <Form.Item> */}
-          {Object.entries(schema.properties).map(([key, value]) =>
-            renderFields(value, [...namePath, key])
-          )}
-          {/* </Form.Item> */}
-        </Card>
-      );
-    } else {
-      console.log("else", schema, namePath, restField);
-      return renderField(schema, [...namePath], restField);
-    }
-  };
-
-  const onFinish = (values) => {
-    console.log("Received values:", values);
-  };
-
-  const onFill = () => {
-    form.setFieldsValue(dataList);
-  };
-  // console.log(schema, dataList);
   return (
     <Form
-      onFinish={onFinish}
       form={form}
-      onFieldsChange={(...args) => console.log(args)}
-      initialValues={dataList}
+      layout={component.properties.layout}
+      onFieldsChange={(changedFields, allFields) => {
+        changedFields.forEach((field) => {
+          const fieldName = field.name[field.name.length - 1];
+          // Check if the changed field has a linked function and execute it
+          const fieldConfig = component.properties.items.find(
+            (item) => item.properties.name === fieldName
+          );
+          if (
+            fieldConfig &&
+            fieldConfig.properties.onChange &&
+            appFunctions[fieldConfig.properties.onChange]
+          ) {
+            appFunctions[fieldConfig.properties.onChange](form, fieldConfig);
+          }
+        });
+      }}
     >
-      <Space>{renderFields(schema)}</Space>
+      {component.properties.items.map((item) => {
+        switch (item.type) {
+          case "Input":
+            return (
+              <Form.Item name={item.properties.name} label={item.label}>
+                <Input />
+              </Form.Item>
+            );
+          case "DatePicker":
+            return (
+              <Form.Item name={item.properties.name} label={item.label}>
+                <DatePicker />
+              </Form.Item>
+            );
+          case "Select":
+            return (
+              <Form.Item name={item.properties.name} label={item.label}>
+                <Select>
+                  {item.options.map((option) => (
+                    <Option value={option}>{option}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            );
+          case "TextArea":
+            return (
+              <Form.Item name={item.properties.name} label={item.label}>
+                <TextArea />
+              </Form.Item>
+            );
+          default:
+            return null;
+        }
+      })}
       <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Submit
+        <Button {...component.properties.submitButton.properties}>
+          {component.properties.submitButton.properties.text + 3}
         </Button>
       </Form.Item>
-      <Button type="link" htmlType="button" onClick={onFill}>
-        Fill form
-      </Button>
     </Form>
   );
 };

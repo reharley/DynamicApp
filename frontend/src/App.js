@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import DynamicApp from "./components/DynamicApp";
 
+import { BrowserRouter } from "react-router-dom";
 const App = () => {
   return (
-    <div>
+    <BrowserRouter>
       <DynamicApp />
-    </div>
+    </BrowserRouter>
   );
 };
 

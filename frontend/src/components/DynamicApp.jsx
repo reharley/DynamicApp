@@ -1,26 +1,14 @@
 import React from "react";
-import {
-  Layout,
-  Menu,
-  Breadcrumb,
-  Row,
-  Col,
-  Card,
-  Form,
-  Input,
-  DatePicker,
-  Button,
-  Select,
-  Table,
-  Modal,
-} from "antd";
+import { Link } from "react-router-dom";
+import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
+
+import DynamicForm from "./DynamicForm";
+
 import appJSON from "../data/sample_app3.json";
-const { TextArea } = Input;
+
 const { Header, Content, Footer } = Layout;
-const { Option } = Select;
 
 const renderComponent = (component) => {
-  console.log(component);
   switch (component.type) {
     case "Layout":
       return (
@@ -31,14 +19,7 @@ const renderComponent = (component) => {
     case "Header":
       return (
         <Header>
-          <div>{component.properties.title}</div>
-          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["1"]}>
-            {component.properties.menu.map((item, index) => (
-              <Menu.Item key={index} href={item.link}>
-                {item.name}
-              </Menu.Item>
-            ))}
-          </Menu>
+          {component.properties.children.map((child) => renderComponent(child))}
         </Header>
       );
     case "Content":
@@ -59,6 +40,16 @@ const renderComponent = (component) => {
           {component.children.map((child) => renderComponent(child))}
         </Col>
       );
+    case "Menu":
+      return (
+        <Menu {...component.properties}>
+          {component.items.map((item) => (
+            <Menu.Item key={item.name}>
+              <Link to={item.link}>{item.name}</Link>
+            </Menu.Item>
+          ))}
+        </Menu>
+      );
     case "Card":
       return (
         <Card title={component.title}>
@@ -66,49 +57,7 @@ const renderComponent = (component) => {
         </Card>
       );
     case "Form":
-      return (
-        <Form layout={component.properties.layout}>
-          {component.properties.items.map((item) => {
-            switch (item.type) {
-              case "Input":
-                return (
-                  <Form.Item label={item.label}>
-                    <Input />
-                  </Form.Item>
-                );
-              case "DatePicker":
-                return (
-                  <Form.Item label={item.label}>
-                    <DatePicker />
-                  </Form.Item>
-                );
-              case "Select":
-                return (
-                  <Form.Item label={item.label}>
-                    <Select>
-                      {item.options.map((option) => (
-                        <Option value={option}>{option}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                );
-              case "TextArea":
-                return (
-                  <Form.Item label={item.label}>
-                    <TextArea />
-                  </Form.Item>
-                );
-              default:
-                return null;
-            }
-          })}
-          <Form.Item>
-            <Button {...component.properties.submitButton.properties}>
-              {component.properties.submitButton.properties.text}
-            </Button>
-          </Form.Item>
-        </Form>
-      );
+      return <DynamicForm component={component} />;
     case "Table":
       return (
         <Table

@@ -7,11 +7,21 @@
         {
           "type": "Header",
           "properties": {
-            "menu": [
-              { "name": "Home", "link": "/" },
-              { "name": "Projects", "link": "/projects" },
-              { "name": "Teams", "link": "/teams" },
-              { "name": "Reports", "link": "/reports" }
+            "children": [
+              {
+                "type": "Menu",
+                "properties": {
+                  "theme": "dark",
+                  "mode": "horizontal",
+                  "defaultSelectedKeys": ["Home"]
+                },
+                "items": [
+                  { "name": "Home", "link": "/" },
+                  { "name": "Projects", "link": "/projects" },
+                  { "name": "Teams", "link": "/teams" },
+                  { "name": "Reports", "link": "/reports" }
+                ]
+              }
             ]
           }
         },
@@ -42,6 +52,7 @@
                                     "label": "Project ID",
                                     "type": "Input",
                                     "properties": {
+                                      "name": "projectId",
                                       "style": { "display": "none" },
                                       "defaultValue": "Generated or Predefined ID"
                                     }
@@ -49,6 +60,9 @@
                                   {
                                     "label": "Project Name",
                                     "type": "Input",
+                                    "properties": {
+                                      "name": "projectName"
+                                    },
                                     "rules": [
                                       {
                                         "required": true,
@@ -59,32 +73,37 @@
                                   {
                                     "label": "Start Date",
                                     "type": "DatePicker",
+                                    "properties": {
+                                      "name": "startDate",
+                                      "onChange": "updateEndDateRestriction"
+                                    },
                                     "rules": [
                                       {
                                         "required": true,
                                         "message": "Please select the start date!"
                                       }
-                                    ],
-                                    "properties": {
-                                      "onChange": "updateEndDateRestriction"
-                                    }
+                                    ]
                                   },
                                   {
                                     "label": "End Date",
                                     "type": "DatePicker",
+                                    "properties": {
+                                      "name": "endDate",
+                                      "disabledDate": "disableBeforeStartDate"
+                                    },
                                     "rules": [
                                       {
                                         "required": true,
                                         "message": "Please select the end date!"
                                       }
-                                    ],
-                                    "properties": {
-                                      "disabledDate": "disableBeforeStartDate"
-                                    }
+                                    ]
                                   },
                                   {
                                     "label": "Status",
                                     "type": "Select",
+                                    "properties": {
+                                      "name": "status"
+                                    },
                                     "options": [
                                       "Planning",
                                       "Active",
@@ -100,6 +119,9 @@
                                   {
                                     "label": "Description",
                                     "type": "TextArea",
+                                    "properties": {
+                                      "name": "description"
+                                    },
                                     "rules": [
                                       {
                                         "required": true,
@@ -113,7 +135,8 @@
                                   "properties": {
                                     "type": "primary",
                                     "htmlType": "submit",
-                                    "text": "Submit"
+                                    "text": "Submit",
+                                    "name": "submitButton"
                                   }
                                 }
                               },
