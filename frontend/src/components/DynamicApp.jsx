@@ -6,54 +6,39 @@ import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 import DynamicForm from "./DynamicForm";
 import appJSON from "../data/sample_app3.json";
 import { AppState } from "../utils/AppState";
+import * as appFunctions from "../appFunctions";
 
 const { Header, Content, Footer } = Layout;
 
 let appState = null;
 
 const renderComponent = (component) => {
-  if (appState === null) return <React.Fragment />;
-  switch (component.type) {
+  if (!appState || !component) return <React.Fragment />;
+  const { type, children } = component;
+  let properties = component.properties ?? {};
+
+  const commonProps = {
+    ...properties,
+    component,
+    children: children && children.map((child) => renderComponent(child)),
+  };
+
+  switch (type) {
     case "Layout":
-      return (
-        <Layout style={component.properties.style}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Layout>
-      );
+      return <Layout {...commonProps} />;
     case "Header":
-      return (
-        <Header>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Header>
-      );
+      return <Header {...commonProps} />;
     case "Content":
-      return (
-        <Content style={component.properties.style}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Content>
-      );
+      return <Content {...commonProps} />;
     case "Row":
-      return (
-        <Row gutter={component.properties.gutter}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Row>
-      );
+      return <Row {...commonProps} />;
     case "Col":
-      return (
-        <Col span={component.properties.span}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Col>
-      );
+      return <Col {...commonProps} />;
     case "Menu":
       return (
-        <Menu {...component.properties}>
-          {component.children &&
-            component.children.map((item) => {
+        <Menu {...properties}>
+          {children &&
+            children.map((item) => {
               if (item.type === "MenuItem") {
                 return (
                   <Menu.Item key={item.properties.key}>
@@ -66,36 +51,34 @@ const renderComponent = (component) => {
         </Menu>
       );
     case "Card":
-      return (
-        <Card title={component.properties.title}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Card>
-      );
+      return <Card {...commonProps} />;
     case "Form":
-      return <DynamicForm component={component} appState={appState} />;
+      return <DynamicForm {...commonProps} appState={appState} />;
     case "Table":
-      return (
-        <Table
-          columns={component.properties.columns}
-          dataSource={component.properties.dataSource}
-        />
-      );
+      const onRow = (record, rowIndex) => {
+        return {
+          onClick: () => {
+            if (
+              component.properties.onRow &&
+              component.properties.onRow.click
+            ) {
+              const functionName = component.properties.onRow.click;
+              if (appFunctions[functionName]) {
+                appFunctions[functionName](record, rowIndex, appState);
+              }
+            }
+          },
+        };
+      };
+      return <Table {...commonProps} onRow={onRow} />;
     case "Footer":
-      return <Footer>{component.properties.text}</Footer>;
+      return <Footer {...commonProps} />;
     case "Modal":
-      return (
-        <Modal
-          title={component.properties.title}
-          visible={component.properties.visible}
-        >
-          {component.properties.content}
-        </Modal>
-      );
+      return <Modal {...commonProps} />;
     case "Breadcrumb":
       return (
-        <Breadcrumb>
-          {component.properties.items.map((item) => (
+        <Breadcrumb {...commonProps}>
+          {properties.items.map((item) => (
             <Breadcrumb.Item key={item.name} href={item.link}>
               {item.name}
             </Breadcrumb.Item>

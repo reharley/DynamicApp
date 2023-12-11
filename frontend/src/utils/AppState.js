@@ -6,12 +6,27 @@ export class AppState {
     this.app = app;
     this.setAppState = setAppState;
     this._initEvents(app);
+    this.formInstances = {};
+  }
+
+  setFormInstance(formName, formInstance) {
+    this.formInstances[formName] = formInstance;
+  }
+
+  getFormInstance(formName) {
+    return this.formInstances?.[formName];
   }
 
   _initEvents(obj) {
     // If the object has an onInit event, call it
     if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
-      appFunctions[obj.onInit](this);
+      // Only call onInit for Forms that have a form instance
+      // (i.e., the Form is rendered in the UI)
+      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
+        appFunctions[obj.onInit](this);
+      } else if (obj.type !== "Form") {
+        appFunctions[obj.onInit](this);
+      }
     }
 
     // Recursively call _initEvents on children
@@ -42,7 +57,12 @@ export class AppState {
   }
 
   getComponent(componentName) {
-    return this._findComponent(this.app, componentName);
+    const component = this._findComponent(this.app, componentName);
+    if (component.type === "Form" && this.formInstances?.[componentName]) {
+      component.formInstance = this.formInstances[componentName];
+    }
+
+    return component;
   }
 
   _findComponent(obj, name) {

@@ -1,62 +1,82 @@
-The project overview table does not have the correct column for name. Please update the app json so that name appears for project names.
+Adjust the submitObject function to reload the projects in the project overview. Update the function description to reflect the new submitObject implementation.
 
 ```javascript
-// appFunctions/index.js
-import objectService from "../services/objectService";
+// utils/AppState.js
+import * as appFunctions from "../appFunctions";
 
-export function updateEndDateRestriction(form, fieldConfig, appState) {
-  const startDate = form.getFieldValue("startDate");
-  const endDate = form.getFieldValue("endDate");
-
-  // Clear the end date if it is before the start date
-  if (startDate && endDate && startDate.isAfter(endDate)) {
-    form.setFields([
-      {
-        name: "endDate",
-        value: null,
-      },
-    ]);
+export class AppState {
+  constructor(app, setAppState) {
+    this.app = app;
+    this.setAppState = setAppState;
+    this._initEvents(app);
+    this.formInstances = {};
   }
 
-  // Disable dates before the start date for the end date
-  const disableEndDate = (current) => {
-    return current && current.isBefore(startDate, "day");
-  };
+  setFormInstance(formName, formInstance) {
+    this.formInstances[formName] = formInstance;
+  }
 
-  // Update the 'disabledDate' property for the 'endDate' field
-  form.setFields([
-    {
-      name: "endDate",
-      disabledDate: disableEndDate,
-    },
-  ]);
-}
+  getFormInstance(formName) {
+    return this.formInstances?.[formName];
+  }
 
-export const submitObject = async (values, appState) => {
-  try {
-    if (values.projectId) {
-      // If projectId exists, it's an update operation
-      await objectService.updateObject(values.projectId, values);
-    } else {
-      // If projectId does not exist, it's a create operation
-      await objectService.createObject(values);
+  _initEvents(obj) {
+    // If the object has an onInit event, call it
+    if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
+      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
+        appFunctions[obj.onInit](this);
+      } else if (obj.type !== "Form") {
+        appFunctions[obj.onInit](this);
+      }
     }
-    // Handle successful operation (e.g., show notification, redirect, etc.)
-  } catch (error) {
-    // Handle errors (e.g., show error message)
-    console.error("Error submitting form:", error);
-  }
-};
 
-export const loadProjectData = async (appState) => {
-  try {
-    const projects = await objectService.getAllObjects();
-    appState.changeComponent("projectOverviewTable", { dataSource: projects });
-  } catch (error) {
-    console.error("Error loading project data:", error);
-    // Handle errors (e.g., show error message)
+    // Recursively call _initEvents on children
+    if (obj.children) {
+      obj.children.forEach((child) => this._initEvents(child));
+    }
   }
-};
+
+  changeComponent(componentName, newProperties) {
+    this.setAppState((prevApp) => {
+      const updatedApp = { ...prevApp };
+      this._updateComponent(updatedApp, componentName, newProperties);
+      return updatedApp;
+    });
+  }
+
+  _updateComponent(obj, componentName, newProperties) {
+    if (obj.name === componentName) {
+      obj.properties = { ...obj.properties, ...newProperties };
+      return;
+    }
+
+    if (obj.children) {
+      obj.children.forEach((child) => {
+        this._updateComponent(child, componentName, newProperties);
+      });
+    }
+  }
+
+  getComponent(componentName) {
+    const component = this._findComponent(this.app, componentName);
+    if (component.type === "Form" && this.formInstances?.[componentName]) {
+      component.formInstance = this.formInstances[componentName];
+    }
+
+    return component;
+  }
+
+  _findComponent(obj, name) {
+    if (obj.name === name) return obj;
+    if (obj.children) {
+      for (const child of obj.children) {
+        const found = this._findComponent(child, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+}
 ```
 
 ```javascript
@@ -68,54 +88,39 @@ import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 import DynamicForm from "./DynamicForm";
 import appJSON from "../data/sample_app3.json";
 import { AppState } from "../utils/AppState";
+import * as appFunctions from "../appFunctions";
 
 const { Header, Content, Footer } = Layout;
 
 let appState = null;
 
 const renderComponent = (component) => {
-  if (appState === null) return <React.Fragment />;
-  switch (component.type) {
+  if (!appState || !component) return <React.Fragment />;
+  const { type, children } = component;
+  let properties = component.properties ?? {};
+
+  const commonProps = {
+    ...properties,
+    component,
+    children: children && children.map((child) => renderComponent(child)),
+  };
+
+  switch (type) {
     case "Layout":
-      return (
-        <Layout style={component.properties.style}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Layout>
-      );
+      return <Layout {...commonProps} />;
     case "Header":
-      return (
-        <Header>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Header>
-      );
+      return <Header {...commonProps} />;
     case "Content":
-      return (
-        <Content style={component.properties.style}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Content>
-      );
+      return <Content {...commonProps} />;
     case "Row":
-      return (
-        <Row gutter={component.properties.gutter}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Row>
-      );
+      return <Row {...commonProps} />;
     case "Col":
-      return (
-        <Col span={component.properties.span}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Col>
-      );
+      return <Col {...commonProps} />;
     case "Menu":
       return (
-        <Menu {...component.properties}>
-          {component.children &&
-            component.children.map((item) => {
+        <Menu {...properties}>
+          {children &&
+            children.map((item) => {
               if (item.type === "MenuItem") {
                 return (
                   <Menu.Item key={item.properties.key}>
@@ -128,36 +133,34 @@ const renderComponent = (component) => {
         </Menu>
       );
     case "Card":
-      return (
-        <Card title={component.properties.title}>
-          {component.children &&
-            component.children.map((child) => renderComponent(child))}
-        </Card>
-      );
+      return <Card {...commonProps} />;
     case "Form":
-      return <DynamicForm component={component} appState={appState} />;
+      return <DynamicForm {...commonProps} appState={appState} />;
     case "Table":
-      return (
-        <Table
-          columns={component.properties.columns}
-          dataSource={component.properties.dataSource}
-        />
-      );
+      const onRow = (record, rowIndex) => {
+        return {
+          onClick: () => {
+            if (
+              component.properties.onRow &&
+              component.properties.onRow.click
+            ) {
+              const functionName = component.properties.onRow.click;
+              if (appFunctions[functionName]) {
+                appFunctions[functionName](record, rowIndex, appState);
+              }
+            }
+          },
+        };
+      };
+      return <Table {...commonProps} onRow={onRow} />;
     case "Footer":
-      return <Footer>{component.properties.text}</Footer>;
+      return <Footer {...commonProps} />;
     case "Modal":
-      return (
-        <Modal
-          title={component.properties.title}
-          visible={component.properties.visible}
-        >
-          {component.properties.content}
-        </Modal>
-      );
+      return <Modal {...commonProps} />;
     case "Breadcrumb":
       return (
-        <Breadcrumb>
-          {component.properties.items.map((item) => (
+        <Breadcrumb {...commonProps}>
+          {properties.items.map((item) => (
             <Breadcrumb.Item key={item.name} href={item.link}>
               {item.name}
             </Breadcrumb.Item>
@@ -226,14 +229,25 @@ export class AppState {
     this.app = app;
     this.setAppState = setAppState;
     this._initEvents(app);
+    this.formInstances = {};
+  }
+
+  setFormInstance(formName, formInstance) {
+    this.formInstances[formName] = formInstance;
+  }
+
+  getFormInstance(formName) {
+    return this.formInstances?.[formName];
   }
 
   _initEvents(obj) {
     // If the object has an onInit event, call it
-    console.log("Initializing", obj.name);
     if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
-      console.log("Calling onInit for", obj.name);
-      appFunctions[obj.onInit](this);
+      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
+        appFunctions[obj.onInit](this);
+      } else if (obj.type !== "Form") {
+        appFunctions[obj.onInit](this);
+      }
     }
 
     // Recursively call _initEvents on children
@@ -264,7 +278,12 @@ export class AppState {
   }
 
   getComponent(componentName) {
-    return this._findComponent(this.app, componentName);
+    const component = this._findComponent(this.app, componentName);
+    if (component.type === "Form" && this.formInstances?.[componentName]) {
+      component.formInstance = this.formInstances[componentName];
+    }
+
+    return component;
   }
 
   _findComponent(obj, name) {
@@ -368,14 +387,14 @@ app json:
                 "children": [
                   {
                     "type": "Card",
-                    "name": "newProjectCard",
+                    "name": "projectCard",
                     "properties": {
                       "title": "New Project Entry"
                     },
                     "children": [
                       {
                         "type": "Form",
-                        "name": "newProjectForm",
+                        "name": "projectForm",
                         "properties": {
                           "layout": "vertical",
                           "onSubmit": "submitObject",
@@ -384,9 +403,8 @@ app json:
                               "label": "Project ID",
                               "type": "Input",
                               "properties": {
-                                "name": "projectId",
-                                "style": { "display": "none" },
-                                "defaultValue": "Generated or Predefined ID"
+                                "name": "id",
+                                "style": { "display": "none" }
                               }
                             },
                             {
@@ -459,7 +477,7 @@ app json:
                           ],
                           "submitButton": {
                             "type": "Button",
-                            "name": "submitNewProjectButton",
+                            "name": "submitProjectButton",
                             "properties": {
                               "type": "primary",
                               "htmlType": "submit",
@@ -471,6 +489,9 @@ app json:
                         "functions": {
                           "updateEndDateRestriction": {
                             "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+                          },
+                          "onInitProjectForm": {
+                            "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
                           }
                         }
                       }
@@ -496,6 +517,9 @@ app json:
                         "type": "Table",
                         "name": "projectOverviewTable",
                         "properties": {
+                          "onRow": {
+                            "click": "populateProjectFormOnSelection"
+                          },
                           "columns": [
                             {
                               "title": "Name",
@@ -524,6 +548,9 @@ app json:
                         "functions": {
                           "loadProjectData": {
                             "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
+                          },
+                          "populateProjectFormOnSelection": {
+                            "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
                           }
                         }
                       }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";
 
@@ -7,11 +7,24 @@ const { TextArea } = Input;
 
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
+  useEffect(() => {
+    const currentFormInstance = appState.getFormInstance(component.name);
+    if (currentFormInstance !== form) {
+      appState.setFormInstance(component.name, form);
+      // Initialize events after the form instance is set
+      if (currentFormInstance === null) appState._initEvents(component);
+    }
+    return () => {
+      appState.setFormInstance(component.name, null);
+    };
+  }, []);
   return (
     <Form
       form={form}
       layout={component.properties.layout}
-      onFinish={appFunctions[component.properties.onSubmit]}
+      onFinish={(values) =>
+        appFunctions[component.properties.onSubmit](values, appState)
+      }
       onFieldsChange={(changedFields, allFields) => {
         changedFields.forEach((field) => {
           const fieldName = field.name[field.name.length - 1];
@@ -37,29 +50,47 @@ const DynamicForm = ({ component, appState }) => {
         switch (item.type) {
           case "Input":
             return (
-              <Form.Item name={item.properties.name} label={item.label}>
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
                 <Input />
               </Form.Item>
             );
           case "DatePicker":
             return (
-              <Form.Item name={item.properties.name} label={item.label}>
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
                 <DatePicker />
               </Form.Item>
             );
           case "Select":
             return (
-              <Form.Item name={item.properties.name} label={item.label}>
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
                 <Select>
                   {item.options.map((option) => (
-                    <Option value={option}>{option}</Option>
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
             );
           case "TextArea":
             return (
-              <Form.Item name={item.properties.name} label={item.label}>
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
                 <TextArea />
               </Form.Item>
             );

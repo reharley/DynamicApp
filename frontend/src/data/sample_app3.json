@@ -83,14 +83,14 @@
                 "children": [
                   {
                     "type": "Card",
-                    "name": "newProjectCard",
+                    "name": "projectCard",
                     "properties": {
                       "title": "New Project Entry"
                     },
                     "children": [
                       {
                         "type": "Form",
-                        "name": "newProjectForm",
+                        "name": "projectForm",
                         "properties": {
                           "layout": "vertical",
                           "onSubmit": "submitObject",
@@ -99,9 +99,8 @@
                               "label": "Project ID",
                               "type": "Input",
                               "properties": {
-                                "name": "projectId",
-                                "style": { "display": "none" },
-                                "defaultValue": "Generated or Predefined ID"
+                                "name": "id",
+                                "style": { "display": "none" }
                               }
                             },
                             {
@@ -174,7 +173,7 @@
                           ],
                           "submitButton": {
                             "type": "Button",
-                            "name": "submitNewProjectButton",
+                            "name": "submitProjectButton",
                             "properties": {
                               "type": "primary",
                               "htmlType": "submit",
@@ -184,8 +183,14 @@
                           }
                         },
                         "functions": {
+                          "submitObject": {
+                            "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
+                          },
                           "updateEndDateRestriction": {
                             "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+                          },
+                          "onInitProjectForm": {
+                            "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
                           }
                         }
                       }
@@ -211,6 +216,9 @@
                         "type": "Table",
                         "name": "projectOverviewTable",
                         "properties": {
+                          "onRow": {
+                            "click": "populateProjectFormOnSelection"
+                          },
                           "columns": [
                             {
                               "title": "Name",
@@ -239,6 +247,9 @@
                         "functions": {
                           "loadProjectData": {
                             "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
+                          },
+                          "populateProjectFormOnSelection": {
+                            "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
                           }
                         }
                       }

@@ -1,4 +1,8 @@
 // appFunctions/index.js
+import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
+
+import * as appFunctions from "../appFunctions";
 import objectService from "../services/objectService";
 
 export function updateEndDateRestriction(form, fieldConfig, appState) {
@@ -29,19 +33,24 @@ export function updateEndDateRestriction(form, fieldConfig, appState) {
   ]);
 }
 
-export const submitObject = async (values, appState) => {
+export const submitObject = async (formData, appState) => {
   try {
-    if (values.projectId) {
-      // If projectId exists, it's an update operation
-      await objectService.updateObject(values.projectId, values);
+    // Check if formData has an id
+    if (formData.id) {
+      // Update the existing project
+      await objectService.updateObject(formData.id, formData);
     } else {
-      // If projectId does not exist, it's a create operation
-      await objectService.createObject(values);
+      // Create a new project
+      await objectService.createObject(formData);
     }
-    // Handle successful operation (e.g., show notification, redirect, etc.)
+
+    // Reload the project data to reflect changes
+    await appFunctions.loadProjectData(appState);
+
+    // Handle UI changes, like showing a success notification
   } catch (error) {
-    // Handle errors (e.g., show error message)
-    console.error("Error submitting form:", error);
+    console.error("Error submitting project:", error);
+    // Handle errors, for example, show an error notification
   }
 };
 
@@ -55,3 +64,45 @@ export const loadProjectData = async (appState) => {
     // Handle errors (e.g., show error message)
   }
 };
+
+export function initializeDateValuesForForm(form, record) {
+  const newRecord = { ...record };
+  const formItems = form.properties.items;
+
+  formItems.forEach((item) => {
+    if (item.type === "DatePicker") {
+      const fieldName = item.properties.name;
+      if (newRecord[fieldName]) {
+        newRecord[fieldName] = dayjs(newRecord[fieldName]);
+      }
+    }
+  });
+
+  return newRecord;
+}
+
+export const populateProjectFormOnSelection = (record, rowIndex, appState) => {
+  console.log("Row selected:", record, rowIndex);
+  const projectForm = appState.getComponent("projectForm");
+
+  if (projectForm && projectForm.formInstance) {
+    const formattedRecord = initializeDateValuesForForm(projectForm, record);
+    projectForm.formInstance.setFieldsValue(formattedRecord);
+  } else {
+    console.error("Project form or form instance not found");
+  }
+};
+
+export function onInitProjectForm(appState) {
+  console.log("onInitProjectForm");
+  const projectForm = appState.getComponent("projectForm");
+
+  if (projectForm && projectForm.formInstance) {
+    const randomGuid = uuidv4();
+    projectForm.formInstance.setFieldsValue({
+      id: randomGuid,
+    });
+  } else {
+    console.error("Project form or form instance not found");
+  }
+}
