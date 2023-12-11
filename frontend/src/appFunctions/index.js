@@ -67,11 +67,11 @@ export const loadProjectData = async (appState) => {
 
 export function initializeDateValuesForForm(form, record) {
   const newRecord = { ...record };
-  const formItems = form.properties.items;
+  const formItems = form.items;
 
   formItems.forEach((item) => {
     if (item.type === "DatePicker") {
-      const fieldName = item.properties.name;
+      const fieldName = item.name;
       if (newRecord[fieldName]) {
         newRecord[fieldName] = dayjs(newRecord[fieldName]);
       }

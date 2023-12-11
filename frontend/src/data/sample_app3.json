@@ -94,83 +94,6 @@
                         "properties": {
                           "layout": "vertical",
                           "onSubmit": "submitObject",
-                          "items": [
-                            {
-                              "label": "Project ID",
-                              "type": "Input",
-                              "properties": {
-                                "name": "id",
-                                "style": { "display": "none" }
-                              }
-                            },
-                            {
-                              "label": "Project Name",
-                              "type": "Input",
-                              "properties": {
-                                "name": "projectName"
-                              },
-                              "rules": [
-                                {
-                                  "required": true,
-                                  "message": "Please input the project name!"
-                                }
-                              ]
-                            },
-                            {
-                              "label": "Start Date",
-                              "type": "DatePicker",
-                              "properties": {
-                                "name": "startDate",
-                                "onChange": "updateEndDateRestriction"
-                              },
-                              "rules": [
-                                {
-                                  "required": true,
-                                  "message": "Please select the start date!"
-                                }
-                              ]
-                            },
-                            {
-                              "label": "End Date",
-                              "type": "DatePicker",
-                              "properties": {
-                                "name": "endDate"
-                              },
-                              "rules": [
-                                {
-                                  "required": true,
-                                  "message": "Please select the end date!"
-                                }
-                              ]
-                            },
-                            {
-                              "label": "Status",
-                              "type": "Select",
-                              "properties": {
-                                "name": "status"
-                              },
-                              "options": ["Planning", "Active", "Completed"],
-                              "rules": [
-                                {
-                                  "required": true,
-                                  "message": "Please select the status!"
-                                }
-                              ]
-                            },
-                            {
-                              "label": "Description",
-                              "type": "TextArea",
-                              "properties": {
-                                "name": "description"
-                              },
-                              "rules": [
-                                {
-                                  "required": true,
-                                  "message": "Please input the description!"
-                                }
-                              ]
-                            }
-                          ],
                           "submitButton": {
                             "type": "Button",
                             "name": "submitProjectButton",
@@ -182,6 +105,71 @@
                             }
                           }
                         },
+                        "items": [
+                          {
+                            "label": "Project ID",
+                            "type": "Input",
+                            "name": "id",
+                            "style": { "display": "none" }
+                          },
+                          {
+                            "label": "Project Name",
+                            "type": "Input",
+                            "name": "projectName",
+                            "rules": [
+                              {
+                                "required": true,
+                                "message": "Please input the project name!"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Start Date",
+                            "type": "DatePicker",
+                            "name": "startDate",
+                            "onChange": "updateEndDateRestriction",
+                            "rules": [
+                              {
+                                "required": true,
+                                "message": "Please select the start date!"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "End Date",
+                            "type": "DatePicker",
+                            "name": "endDate",
+                            "rules": [
+                              {
+                                "required": true,
+                                "message": "Please select the end date!"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Status",
+                            "type": "Select",
+                            "name": "status",
+                            "options": ["Planning", "Active", "Completed"],
+                            "rules": [
+                              {
+                                "required": true,
+                                "message": "Please select the status!"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Description",
+                            "type": "TextArea",
+                            "name": "description",
+                            "rules": [
+                              {
+                                "required": true,
+                                "message": "Please input the description!"
+                              }
+                            ]
+                          }
+                        ],
                         "functions": {
                           "submitObject": {
                             "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."

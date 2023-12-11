@@ -1,4 +1,4 @@
-Adjust the submitObject function to reload the projects in the project overview. Update the function description to reflect the new submitObject implementation.
+Refactor DynamicForm afterwords so that it can take advantage of the form items no longer having a properties prop. Also refactor so Form.Item is used only once instead with every item.type return
 
 ```javascript
 // utils/AppState.js
@@ -299,6 +299,116 @@ export class AppState {
 }
 ```
 
+```javascript
+// components/DynamicForm.jsx
+import React, { useEffect } from "react";
+import { Form, Input, DatePicker, Button, Select } from "antd";
+import * as appFunctions from "../appFunctions";
+
+const { Option } = Select;
+const { TextArea } = Input;
+
+const DynamicForm = ({ component, appState }) => {
+  const [form] = Form.useForm();
+  useEffect(() => {
+    const currentFormInstance = appState.getFormInstance(component.name);
+    if (currentFormInstance !== form) {
+      appState.setFormInstance(component.name, form);
+      // Initialize events after the form instance is set
+      if (currentFormInstance === null) appState._initEvents(component);
+    }
+    return () => {
+      appState.setFormInstance(component.name, null);
+    };
+  }, []);
+  return (
+    <Form
+      form={form}
+      layout={component.properties.layout}
+      onFinish={(values) =>
+        appFunctions[component.properties.onSubmit](values, appState)
+      }
+      onFieldsChange={(changedFields, allFields) => {
+        changedFields.forEach((field) => {
+          const fieldName = field.name[field.name.length - 1];
+          // Check if the changed field has a linked function and execute it
+          const fieldConfig = component.properties.items.find(
+            (item) => item.properties.name === fieldName
+          );
+          if (
+            fieldConfig &&
+            fieldConfig.onChange &&
+            appFunctions[fieldConfig.onChange]
+          ) {
+            appFunctions[fieldConfig.onChange](form, fieldConfig, appState);
+          }
+        });
+      }}
+    >
+      {component.properties.items.map((item) => {
+        switch (item.type) {
+          case "Input":
+            return (
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
+                <Input />
+              </Form.Item>
+            );
+          case "DatePicker":
+            return (
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
+                <DatePicker />
+              </Form.Item>
+            );
+          case "Select":
+            return (
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
+                <Select>
+                  {item.options.map((option) => (
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            );
+          case "TextArea":
+            return (
+              <Form.Item
+                key={item.properties.name}
+                name={item.properties.name}
+                label={item.label}
+              >
+                <TextArea />
+              </Form.Item>
+            );
+          default:
+            return null;
+        }
+      })}
+      <Form.Item>
+        <Button {...component.properties.submitButton.properties}>
+          {component.properties.submitButton.properties.text}
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
+
+export default DynamicForm;
+```
+
 app json:
 
 ```json
@@ -402,17 +512,13 @@ app json:
                             {
                               "label": "Project ID",
                               "type": "Input",
-                              "properties": {
-                                "name": "id",
-                                "style": { "display": "none" }
-                              }
+                              "name": "id",
+                              "style": { "display": "none" }
                             },
                             {
                               "label": "Project Name",
                               "type": "Input",
-                              "properties": {
-                                "name": "projectName"
-                              },
+                              "name": "projectName",
                               "rules": [
                                 {
                                   "required": true,
@@ -423,10 +529,8 @@ app json:
                             {
                               "label": "Start Date",
                               "type": "DatePicker",
-                              "properties": {
-                                "name": "startDate",
-                                "onChange": "updateEndDateRestriction"
-                              },
+                              "name": "startDate",
+                              "onChange": "updateEndDateRestriction",
                               "rules": [
                                 {
                                   "required": true,
@@ -437,9 +541,7 @@ app json:
                             {
                               "label": "End Date",
                               "type": "DatePicker",
-                              "properties": {
-                                "name": "endDate"
-                              },
+                              "name": "endDate",
                               "rules": [
                                 {
                                   "required": true,
@@ -450,9 +552,7 @@ app json:
                             {
                               "label": "Status",
                               "type": "Select",
-                              "properties": {
-                                "name": "status"
-                              },
+                              "name": "status",
                               "options": ["Planning", "Active", "Completed"],
                               "rules": [
                                 {
@@ -464,9 +564,7 @@ app json:
                             {
                               "label": "Description",
                               "type": "TextArea",
-                              "properties": {
-                                "name": "description"
-                              },
+                              "name": "description",
                               "rules": [
                                 {
                                   "required": true,
@@ -487,6 +585,9 @@ app json:
                           }
                         },
                         "functions": {
+                          "submitObject": {
+                            "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
+                          },
                           "updateEndDateRestriction": {
                             "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
                           },
