@@ -80,7 +80,12 @@ const RenderComponent = ({ component }) => {
             ) {
               const functionName = component.properties.onRow.click;
               if (appFunctions[functionName]) {
-                appFunctions[functionName](record, rowIndex, appState);
+                appFunctions[functionName](
+                  record,
+                  rowIndex,
+                  appState,
+                  component
+                );
               }
             }
           },

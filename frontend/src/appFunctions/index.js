@@ -53,7 +53,7 @@ export const submitObject = async (formData, appState, component) => {
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
-    console.error("Error submitting project:", error);
+    console.error(`Error submitting ${component.name}:`, error);
     // Handle errors, for example, show an error notification
   }
 };
@@ -85,15 +85,20 @@ export function initializeDateValuesForForm(form, record) {
   return newRecord;
 }
 
-export const populateProjectFormOnSelection = (record, rowIndex, appState) => {
-  console.log("Row selected:", record, rowIndex);
-  const projectForm = appState.getComponent("projectForm");
-
-  if (projectForm && projectForm.formInstance) {
-    const formattedRecord = initializeDateValuesForForm(projectForm, record);
-    projectForm.formInstance.setFieldsValue(formattedRecord);
+export const populateObjectFormOnSelection = (
+  record,
+  rowIndex,
+  appState,
+  component
+) => {
+  console.log("Row selected:", record, rowIndex, component);
+  const objectForm = appState.getComponent(component.objectFormName);
+  console.log("objectForm", objectForm);
+  if (objectForm && objectForm.formInstance) {
+    const formattedRecord = initializeDateValuesForForm(objectForm, record);
+    objectForm.formInstance.setFieldsValue(formattedRecord);
   } else {
-    console.error("Project form or form instance not found");
+    console.error("Object form or form instance not found");
   }
 };
 

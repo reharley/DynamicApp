@@ -51,28 +51,34 @@ export class AppState {
 
   getComponent(componentName) {
     let component = this._findComponent(this.app, componentName);
-
-    // Check in customViews if not found in regular structure
-    if (!component && this.app.customViews) {
-      component = this._findComponent(this.app.customViews, componentName);
+    if (!component) {
+      // Search in custom views
+      const customViewComponent = this._findComponentInCustomViews(
+        this.app.customViews,
+        componentName
+      );
+      if (customViewComponent) {
+        component = customViewComponent;
+      }
     }
-
-    if (
-      component &&
-      component.type === "Form" &&
-      this.formInstances?.[componentName]
-    ) {
-      component.formInstance = this.formInstances[componentName];
+    component.componentInstance = this.getComponentInstance(componentName);
+    if (component.type === "Form" && component.componentInstance) {
+      component.formInstance = component.componentInstance;
     }
-
     return component;
   }
-
+  _findComponentInCustomViews(customViews, name) {
+    for (const viewKey in customViews) {
+      const found = this._findComponent(customViews[viewKey], name);
+      if (found) return found;
+    }
+    return null;
+  }
   _findComponent(obj, name) {
     if (obj.name === name) return obj;
     const children = obj.children || obj.items;
     if (children) {
-      for (const child of obj.children) {
+      for (const child of children) {
         const found = this._findComponent(child, name);
         if (found) return found;
       }

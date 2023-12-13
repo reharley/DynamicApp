@@ -1,4 +1,4 @@
-Add the submitObject function to the teamForm
+Rewrite the descriptions for loadObjectData and submitObject to take into account that it's generic based on objectType
 
 ```javascript
 // utils/AppState.js
@@ -316,35 +316,23 @@ export const submitObject = async (formData, appState, component) => {
     }
 
     // Reload the project data to reflect changes
-    await appFunctions.loadProjectData(appState, component);
+    await appFunctions.loadObjectData(appState, component);
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
-    console.error("Error submitting project:", error);
+    console.error(`Error submitting ${component.name}:`, error);
     // Handle errors, for example, show an error notification
   }
 };
 
-export const loadProjectData = async (appState, component) => {
+export const loadObjectData = async (appState, component) => {
   try {
-    const projects = await objectService.getAllObjects(component.objectType);
-    appState.changeComponent("projectOverviewTable", { dataSource: projects });
+    const objects = await objectService.getAllObjects(component.objectType);
+    console.log(component.name, objects);
+    appState.changeComponent(component.name, { dataSource: objects });
   } catch (error) {
     console.error("Error loading project data:", error);
     // Handle errors (e.g., show error message)
-  }
-};
-
-export const loadTeamData = async (appState, component) => {
-  try {
-    // Assuming you have a similar function in your objectService to fetch team data
-    const teams = await objectService.getAllObjects(component.objectType);
-
-    // Update the 'teamOverviewTable' component with the fetched team data
-    appState.changeComponent("teamOverviewTable", { dataSource: teams });
-  } catch (error) {
-    console.error("Error loading team data:", error);
-    // Handle errors, for example, show an error notification
   }
 };
 
@@ -811,9 +799,9 @@ app json:
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadProjectData",
+                    "onInit": "loadObjectData",
                     "functions": {
-                      "loadProjectData": {
+                      "loadObjectData": {
                         "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
                       },
                       "populateProjectFormOnSelection": {
@@ -854,7 +842,7 @@ app json:
                     "objectType": "Team",
                     "properties": {
                       "layout": "vertical",
-                      "onSubmit": "submitTeamData",
+                      "onSubmit": "submitObject",
                       "submitButton": {
                         "type": "Button",
                         "name": "submitTeamButton",
@@ -867,6 +855,12 @@ app json:
                       }
                     },
                     "items": [
+                      {
+                        "label": "Team ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
                       {
                         "label": "Team Name",
                         "type": "Input",
@@ -983,9 +977,9 @@ app json:
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadTeamData",
+                    "onInit": "loadObjectData",
                     "functions": {
-                      "loadTeamData": {
+                      "loadObjectData": {
                         "description": "Function to load team data into the table."
                       }
                     }

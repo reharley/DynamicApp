@@ -8,19 +8,14 @@ const { TextArea } = Input;
 
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
-  useEffect(() => {
-    const currentComponentInstance = appState.getComponentInstance(
-      component.name
-    );
-    if (currentComponentInstance !== form) {
-      appState.setComponentInstance(component.name, form);
-      if (currentComponentInstance === null && component.onInit)
-        appFunctions[component.onInit](appState);
-    }
-    return () => {
-      appState.setComponentInstance(component.name, null);
-    };
-  }, []);
+  const currentComponentInstance = appState.getComponentInstance(
+    component.name
+  );
+  if (currentComponentInstance !== form) {
+    appState.setComponentInstance(component.name, form);
+    if (currentComponentInstance === undefined && component.onInit)
+      appFunctions[component.onInit](appState);
+  }
 
   const renderFormItem = (item) => {
     // Switch statement to render form input based on type

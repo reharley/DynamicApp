@@ -266,18 +266,7 @@
                           }
                         ]
                       }
-                    ],
-                    "functions": {
-                      "submitObject": {
-                        "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
-                      },
-                      "updateEndDateRestriction": {
-                        "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
-                      },
-                      "onInitProjectForm": {
-                        "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
-                      }
-                    }
+                    ]
                   }
                 ]
               }
@@ -301,9 +290,10 @@
                     "type": "Table",
                     "name": "projectOverviewTable",
                     "objectType": "Project",
+                    "objectFormName": "projectForm",
                     "properties": {
                       "onRow": {
-                        "click": "populateProjectFormOnSelection"
+                        "click": "populateObjectFormOnSelection"
                       },
                       "columns": [
                         {
@@ -329,15 +319,7 @@
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadObjectData",
-                    "functions": {
-                      "loadObjectData": {
-                        "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
-                      },
-                      "populateProjectFormOnSelection": {
-                        "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
-                      }
-                    }
+                    "onInit": "loadObjectData"
                   }
                 ]
               }
@@ -453,12 +435,7 @@
                           }
                         ]
                       }
-                    ],
-                    "functions": {
-                      "submitTeamData": {
-                        "description": "This function handles the submission of new team data to the backend."
-                      }
-                    }
+                    ]
                   }
                 ]
               }
@@ -482,7 +459,11 @@
                     "type": "Table",
                     "name": "teamOverviewTable",
                     "objectType": "Team",
+                    "objectFormName": "teamForm",
                     "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
                       "columns": [
                         {
                           "title": "Team Name",
@@ -507,18 +488,30 @@
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadObjectData",
-                    "functions": {
-                      "loadObjectData": {
-                        "description": "Function to load team data into the table."
-                      }
-                    }
+                    "onInit": "loadObjectData"
                   }
                 ]
               }
             ]
           }
         ]
+      }
+    },
+    "functions": {
+      "loadObjectData": {
+        "description": "This function is triggered when a component like a table or form is initialized. It fetches the relevant data for the specified object type (e.g., projects, teams) from the backend and updates the component's dataSource. This function ensures that the component displays the most current data as soon as it loads."
+      },
+      "populateObjectFormOnSelection": {
+        "description": "This function is activated when a user selects an object row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected object, enabling the user to edit object details. It includes error handling for scenarios where object data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of object data directly from the overview table."
+      },
+      "submitObject": {
+        "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
+      },
+      "updateEndDateRestriction": {
+        "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+      },
+      "onInitProjectForm": {
+        "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
       }
     },
     "navigation": {
