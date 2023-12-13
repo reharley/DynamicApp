@@ -19,6 +19,7 @@
               "mode": "horizontal",
               "defaultSelectedKeys": ["Home"]
             },
+            "onInit": "initMainMenu",
             "items": [
               {
                 "type": "MenuItem",
@@ -495,9 +496,153 @@
             ]
           }
         ]
+      },
+      "ReportsView": {
+        "type": "Row",
+        "name": "reportsRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "reportsLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportCreationCard",
+                "properties": {
+                  "title": "Report Creation"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "reportForm",
+                    "objectType": "Report",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitObject",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitProjectButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Submit",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Report ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
+                      {
+                        "label": "Report Name",
+                        "type": "Input",
+                        "name": "reportName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the report name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Date Range",
+                        "type": "RangePicker",
+                        "name": "dateRange",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the date range!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Report Type",
+                        "type": "Select",
+                        "name": "reportType",
+                        "properties": {
+                          "options": [
+                            { "label": "Type 1", "value": "type1" },
+                            { "label": "Type 2", "value": "type2" }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the report type!"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "reportsRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportsOverviewCard",
+                "properties": {
+                  "title": "Reports Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "reportsTable",
+                    "objectType": "Report",
+                    "objectFormName": "reportForm",
+                    "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
+                      "columns": [
+                        {
+                          "title": "ID",
+                          "dataIndex": "id",
+                          "key": "id"
+                        },
+                        {
+                          "title": "Date Range",
+                          "dataIndex": "dateRange",
+                          "key": "dateRange"
+                        },
+                        {
+                          "title": "Report Type",
+                          "dataIndex": "reportType",
+                          "key": "reportType"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadObjectData"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     "functions": {
+      "initMainMenu": {
+        "description": "This function is triggered during the initialization of the 'mainMenu' component. It sets the 'selectedKey' of the menu to match the current route if the key exists. This ensures that the correct menu item is highlighted based on the current navigation context, enhancing the user experience by providing visual feedback on the active menu item."
+      },
       "loadObjectData": {
         "description": "This function is triggered when a component like a table or form is initialized. It fetches the relevant data for the specified object type (e.g., projects, teams) from the backend and updates the component's dataSource. This function ensures that the component displays the most current data as soon as it loads."
       },

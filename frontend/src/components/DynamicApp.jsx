@@ -1,6 +1,6 @@
 // components/DynamicApp.js
-import React, { useState, useEffect, useRef } from "react";
-import { Link, Routes, Route } from "react-router-dom";
+import React, { useState, useRef } from "react";
+import { Link, Routes, Route, useLocation } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
 import DynamicForm from "./DynamicForm";
@@ -19,6 +19,7 @@ const RenderComponent = ({ component }) => {
   const currentComponentInstance = appState.getComponentInstance(
     component.name
   );
+  if (component.onInit) console.log(component.onInit);
   if (currentComponentInstance !== componentRef) {
     appState.setComponentInstance(component.name, componentRef);
     if (currentComponentInstance === undefined && component.onInit) {
@@ -133,8 +134,9 @@ const RenderComponent = ({ component }) => {
 
 const DynamicApp = () => {
   const [app, setApp] = useState(appJSON?.app);
-  if (appState === null) appState = new AppState(app, setApp);
-  appState.setState(app, setApp);
+  const location = useLocation();
+  if (appState === null) appState = new AppState(app, setApp, location);
+  appState.setState(app, setApp, location);
   return <RenderComponent component={app} />;
 };
 

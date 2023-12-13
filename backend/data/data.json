@@ -28,5 +28,16 @@
             "description": "Best team in the business.",
             "id": 1
         }
+    ],
+    "Report": [
+        {
+            "reportName": "The Final Report",
+            "dateRange": [
+                "2023-12-12T08:27:05.166Z",
+                "2024-01-18T08:27:05.166Z"
+            ],
+            "reportType": "type1",
+            "id": 1
+        }
     ]
 }

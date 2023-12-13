@@ -1,13 +1,13 @@
 // utils/AppState.js
 export class AppState {
-  constructor(app, setAppState) {
+  setState(app, setAppState, location) {
     this.app = app;
+    this.location = location;
     this.setAppState = setAppState;
-    this.componentInstances = {};
   }
-  setState(app, setAppState) {
-    this.app = app;
-    this.setAppState = setAppState;
+  constructor(app, setAppState, location) {
+    this.setState(app, setAppState, location);
+    this.componentInstances = {};
   }
   setComponentInstance(componentName, componentInstance) {
     this.componentInstances[componentName] = componentInstance;

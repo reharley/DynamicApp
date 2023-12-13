@@ -1,16 +1,16 @@
-Rewrite the descriptions for loadObjectData and submitObject to take into account that it's generic based on objectType
+write the implementation of initMainMenu in appFunctions/index.js
 
 ```javascript
 // utils/AppState.js
 export class AppState {
-  constructor(app, setAppState) {
+  setState(app, setAppState, location) {
     this.app = app;
+    this.location = location;
     this.setAppState = setAppState;
-    this.componentInstances = {};
   }
-  setState(app, setAppState) {
-    this.app = app;
-    this.setAppState = setAppState;
+  constructor(app, setAppState, location) {
+    this.setState(app, setAppState, location);
+    this.componentInstances = {};
   }
   setComponentInstance(componentName, componentInstance) {
     this.componentInstances[componentName] = componentInstance;
@@ -54,28 +54,34 @@ export class AppState {
 
   getComponent(componentName) {
     let component = this._findComponent(this.app, componentName);
-
-    // Check in customViews if not found in regular structure
-    if (!component && this.app.customViews) {
-      component = this._findComponent(this.app.customViews, componentName);
+    if (!component) {
+      // Search in custom views
+      const customViewComponent = this._findComponentInCustomViews(
+        this.app.customViews,
+        componentName
+      );
+      if (customViewComponent) {
+        component = customViewComponent;
+      }
     }
-
-    if (
-      component &&
-      component.type === "Form" &&
-      this.formInstances?.[componentName]
-    ) {
-      component.formInstance = this.formInstances[componentName];
+    component.componentInstance = this.getComponentInstance(componentName);
+    if (component.type === "Form" && component.componentInstance) {
+      component.formInstance = component.componentInstance;
     }
-
     return component;
   }
-
+  _findComponentInCustomViews(customViews, name) {
+    for (const viewKey in customViews) {
+      const found = this._findComponent(customViews[viewKey], name);
+      if (found) return found;
+    }
+    return null;
+  }
   _findComponent(obj, name) {
     if (obj.name === name) return obj;
     const children = obj.children || obj.items;
     if (children) {
-      for (const child of obj.children) {
+      for (const child of children) {
         const found = this._findComponent(child, name);
         if (found) return found;
       }
@@ -87,8 +93,8 @@ export class AppState {
 
 ```javascript
 // components/DynamicApp.js
-import React, { useState, useEffect, useRef } from "react";
-import { Link, Routes, Route } from "react-router-dom";
+import React, { useState, useRef } from "react";
+import { Link, Routes, Route, useLocation } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
 import DynamicForm from "./DynamicForm";
@@ -168,7 +174,12 @@ const RenderComponent = ({ component }) => {
             ) {
               const functionName = component.properties.onRow.click;
               if (appFunctions[functionName]) {
-                appFunctions[functionName](record, rowIndex, appState);
+                appFunctions[functionName](
+                  record,
+                  rowIndex,
+                  appState,
+                  component
+                );
               }
             }
           },
@@ -216,8 +227,9 @@ const RenderComponent = ({ component }) => {
 
 const DynamicApp = () => {
   const [app, setApp] = useState(appJSON?.app);
-  if (appState === null) appState = new AppState(app, setApp);
-  appState.setState(app, setApp);
+  const location = useLocation();
+  if (appState === null) appState = new AppState(app, setApp, location);
+  appState.setState(app, setApp, location);
   return <RenderComponent component={app} />;
 };
 
@@ -230,11 +242,13 @@ import axios from "axios";
 
 const baseUrl = "http://localhost:3001/api";
 
+// Fetches all instances of a specified object type from the server.
 const getAllObjects = async (objectName) => {
   const response = await axios.get(`${baseUrl}/objects/${objectName}`);
   return response.data;
 };
 
+// Fetches all instances of a specified object type from the server.
 const createObject = async (objectName, newObject) => {
   const response = await axios.post(
     `${baseUrl}/objects/${objectName}`,
@@ -243,6 +257,7 @@ const createObject = async (objectName, newObject) => {
   return response.data;
 };
 
+// Updates an existing instance of a specified object type on the server.
 const updateObject = async (objectName, id, updatedObject) => {
   const response = await axios.put(
     `${baseUrl}/objects/${objectName}/${id}`,
@@ -251,6 +266,7 @@ const updateObject = async (objectName, id, updatedObject) => {
   return response.data;
 };
 
+// Deletes an instance of a specified object type from the server.
 const deleteObject = async (objectName, id) => {
   const response = await axios.delete(`${baseUrl}/objects/${objectName}/${id}`);
   return response.data;
@@ -352,15 +368,20 @@ export function initializeDateValuesForForm(form, record) {
   return newRecord;
 }
 
-export const populateProjectFormOnSelection = (record, rowIndex, appState) => {
-  console.log("Row selected:", record, rowIndex);
-  const projectForm = appState.getComponent("projectForm");
-
-  if (projectForm && projectForm.formInstance) {
-    const formattedRecord = initializeDateValuesForForm(projectForm, record);
-    projectForm.formInstance.setFieldsValue(formattedRecord);
+export const populateObjectFormOnSelection = (
+  record,
+  rowIndex,
+  appState,
+  component
+) => {
+  console.log("Row selected:", record, rowIndex, component);
+  const objectForm = appState.getComponent(component.objectFormName);
+  console.log("objectForm", objectForm);
+  if (objectForm && objectForm.formInstance) {
+    const formattedRecord = initializeDateValuesForForm(objectForm, record);
+    objectForm.formInstance.setFieldsValue(formattedRecord);
   } else {
-    console.error("Project form or form instance not found");
+    console.error("Object form or form instance not found");
   }
 };
 
@@ -387,22 +408,18 @@ import * as appFunctions from "../appFunctions";
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
-  useEffect(() => {
-    const currentComponentInstance = appState.getComponentInstance(
-      component.name
-    );
-    if (currentComponentInstance !== form) {
-      appState.setComponentInstance(component.name, form);
-      if (currentComponentInstance === null && component.onInit)
-        appFunctions[component.onInit](appState);
-    }
-    return () => {
-      appState.setComponentInstance(component.name, null);
-    };
-  }, []);
+  const currentComponentInstance = appState.getComponentInstance(
+    component.name
+  );
+  if (currentComponentInstance !== form) {
+    appState.setComponentInstance(component.name, form);
+    if (currentComponentInstance === undefined && component.onInit)
+      appFunctions[component.onInit](appState);
+  }
 
   const renderFormItem = (item) => {
     // Switch statement to render form input based on type
@@ -412,6 +429,8 @@ const DynamicForm = ({ component, appState }) => {
           return <Input />;
         case "DatePicker":
           return <DatePicker />;
+        case "RangePicker":
+          return <RangePicker />;
         case "Select":
           return <Select {...item.properties} />;
         case "TextArea":
@@ -736,18 +755,7 @@ app json:
                           }
                         ]
                       }
-                    ],
-                    "functions": {
-                      "submitObject": {
-                        "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
-                      },
-                      "updateEndDateRestriction": {
-                        "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
-                      },
-                      "onInitProjectForm": {
-                        "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
-                      }
-                    }
+                    ]
                   }
                 ]
               }
@@ -771,9 +779,10 @@ app json:
                     "type": "Table",
                     "name": "projectOverviewTable",
                     "objectType": "Project",
+                    "objectFormName": "projectForm",
                     "properties": {
                       "onRow": {
-                        "click": "populateProjectFormOnSelection"
+                        "click": "populateObjectFormOnSelection"
                       },
                       "columns": [
                         {
@@ -799,15 +808,7 @@ app json:
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadObjectData",
-                    "functions": {
-                      "loadObjectData": {
-                        "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
-                      },
-                      "populateProjectFormOnSelection": {
-                        "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
-                      }
-                    }
+                    "onInit": "loadObjectData"
                   }
                 ]
               }
@@ -923,12 +924,7 @@ app json:
                           }
                         ]
                       }
-                    ],
-                    "functions": {
-                      "submitTeamData": {
-                        "description": "This function handles the submission of new team data to the backend."
-                      }
-                    }
+                    ]
                   }
                 ]
               }
@@ -952,7 +948,11 @@ app json:
                     "type": "Table",
                     "name": "teamOverviewTable",
                     "objectType": "Team",
+                    "objectFormName": "teamForm",
                     "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
                       "columns": [
                         {
                           "title": "Team Name",
@@ -977,18 +977,174 @@ app json:
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadObjectData",
-                    "functions": {
-                      "loadObjectData": {
-                        "description": "Function to load team data into the table."
-                      }
-                    }
+                    "onInit": "loadObjectData"
                   }
                 ]
               }
             ]
           }
         ]
+      },
+      "ReportsView": {
+        "type": "Row",
+        "name": "reportsRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "reportsLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportCreationCard",
+                "properties": {
+                  "title": "Report Creation"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "reportForm",
+                    "objectType": "Report",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitObject",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitProjectButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Submit",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Report ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
+                      {
+                        "label": "Report Name",
+                        "type": "Input",
+                        "name": "reportName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the report name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Date Range",
+                        "type": "RangePicker",
+                        "name": "dateRange",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the date range!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Report Type",
+                        "type": "Select",
+                        "name": "reportType",
+                        "properties": {
+                          "options": [
+                            { "label": "Type 1", "value": "type1" },
+                            { "label": "Type 2", "value": "type2" }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the report type!"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "reportsRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportsOverviewCard",
+                "properties": {
+                  "title": "Reports Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "reportsTable",
+                    "objectType": "Report",
+                    "objectFormName": "reportForm",
+                    "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
+                      "columns": [
+                        {
+                          "title": "ID",
+                          "dataIndex": "id",
+                          "key": "id"
+                        },
+                        {
+                          "title": "Date Range",
+                          "dataIndex": "dateRange",
+                          "key": "dateRange"
+                        },
+                        {
+                          "title": "Report Type",
+                          "dataIndex": "reportType",
+                          "key": "reportType"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadObjectData"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "functions": {
+      "initMainMenu": {
+        "description": "This function is triggered during the initialization of the 'mainMenu' component. It sets the 'selectedKey' of the menu to match the current route if the key exists. This ensures that the correct menu item is highlighted based on the current navigation context, enhancing the user experience by providing visual feedback on the active menu item."
+      },
+      "loadObjectData": {
+        "description": "This function is triggered when a component like a table or form is initialized. It fetches the relevant data for the specified object type (e.g., projects, teams) from the backend and updates the component's dataSource. This function ensures that the component displays the most current data as soon as it loads."
+      },
+      "populateObjectFormOnSelection": {
+        "description": "This function is activated when a user selects an object row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected object, enabling the user to edit object details. It includes error handling for scenarios where object data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of object data directly from the overview table."
+      },
+      "submitObject": {
+        "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
+      },
+      "updateEndDateRestriction": {
+        "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+      },
+      "onInitProjectForm": {
+        "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
       }
     },
     "navigation": {

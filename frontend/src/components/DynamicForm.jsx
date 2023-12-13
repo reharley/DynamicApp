@@ -5,6 +5,7 @@ import * as appFunctions from "../appFunctions";
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
@@ -25,6 +26,8 @@ const DynamicForm = ({ component, appState }) => {
           return <Input />;
         case "DatePicker":
           return <DatePicker />;
+        case "RangePicker":
+          return <RangePicker />;
         case "Select":
           return <Select {...item.properties} />;
         case "TextArea":

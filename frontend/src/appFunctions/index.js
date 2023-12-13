@@ -115,3 +115,34 @@ export function onInitProjectForm(appState) {
     console.error("Project form or form instance not found");
   }
 }
+
+/**
+ * Initializes the main menu by setting the selected key based on the current route.
+ * @param {AppState} appState - The state of the application.
+ * @param {Component} component - The component that triggered the event.
+ */
+export function initMainMenu(appState, component) {
+  console.log("initMainMenu");
+  // Retrieve the mainMenu component from the app state
+  const mainMenu = appState.getComponent("mainMenu");
+  console.log("mainMenu", mainMenu);
+  // Check if the mainMenu component is found
+  if (!mainMenu) {
+    console.error("MainMenu component not found.");
+    return;
+  }
+
+  // Get the current location's pathname
+  const currentPath = appState.location.pathname;
+  console.log("currentPath", currentPath);
+  // Derive the selected key based on the current route
+  const selectedKey = mainMenu.items.find(
+    (item) => item.properties.link === currentPath
+  )?.properties.key;
+
+  // If a selected key is found, update the mainMenu component
+  if (selectedKey) {
+    console.log("Selected key:", selectedKey);
+    appState.changeComponent("mainMenu", { selectedKeys: [selectedKey] });
+  }
+}
