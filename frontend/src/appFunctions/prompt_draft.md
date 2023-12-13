@@ -1,16 +1,13 @@
-Refactor renderComponent DynamicApp to incorporate the new changes in app json.
-The changes are a new component type to add to renderComponent where Routes and Route are being used from react-router-dom for new cases.
-There is also a new CustomView type to add a case for. It will render the Custom view described as one of the outermost properties off the app object.
+Refactor renderComponent into a functional component so that it can call the onInit function of that component. An example of this is DynamicForm where is sets the form instance and runs the initialization event.
+
+When refactoring, rename getFormInstance and setFormInstance into getComponentInstance and setComponentInstance and reuse those functions for RenderComponent
 
 ```javascript
 // utils/AppState.js
-import * as appFunctions from "../appFunctions";
-
 export class AppState {
   constructor(app, setAppState) {
     this.app = app;
     this.setAppState = setAppState;
-    this._initEvents(app);
     this.formInstances = {};
   }
 
@@ -20,22 +17,6 @@ export class AppState {
 
   getFormInstance(formName) {
     return this.formInstances?.[formName];
-  }
-
-  _initEvents(obj) {
-    // If the object has an onInit event, call it
-    if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
-      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
-        appFunctions[obj.onInit](this);
-      } else if (obj.type !== "Form") {
-        appFunctions[obj.onInit](this);
-      }
-    }
-
-    // Recursively call _initEvents on children
-    if (obj.children) {
-      obj.children.forEach((child) => this._initEvents(child));
-    }
   }
 
   changeComponent(componentName, newProperties) {
@@ -60,8 +41,18 @@ export class AppState {
   }
 
   getComponent(componentName) {
-    const component = this._findComponent(this.app, componentName);
-    if (component.type === "Form" && this.formInstances?.[componentName]) {
+    let component = this._findComponent(this.app, componentName);
+
+    // Check in customViews if not found in regular structure
+    if (!component && this.app.customViews) {
+      component = this._findComponent(this.app.customViews, componentName);
+    }
+
+    if (
+      component &&
+      component.type === "Form" &&
+      this.formInstances?.[componentName]
+    ) {
       component.formInstance = this.formInstances[componentName];
     }
 
@@ -70,7 +61,8 @@ export class AppState {
 
   _findComponent(obj, name) {
     if (obj.name === name) return obj;
-    if (obj.children) {
+    const children = obj.children || obj.items;
+    if (children) {
       for (const child of obj.children) {
         const found = this._findComponent(child, name);
         if (found) return found;
@@ -84,7 +76,7 @@ export class AppState {
 ```javascript
 // components/DynamicApp.js
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Routes, Route } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
 import DynamicForm from "./DynamicForm";
@@ -121,8 +113,8 @@ const renderComponent = (component) => {
     case "Menu":
       return (
         <Menu {...properties}>
-          {children &&
-            children.map((item) => {
+          {component.items &&
+            component.items.map((item) => {
               if (item.type === "MenuItem") {
                 return (
                   <Menu.Item key={item.properties.key}>
@@ -169,20 +161,29 @@ const renderComponent = (component) => {
           ))}
         </Breadcrumb>
       );
+
+    case "Routes":
+      return <Routes>{children.map((child) => renderComponent(child))}</Routes>;
+
+    case "Route":
+      return (
+        <Route
+          path={properties.path}
+          element={renderComponent(properties.element)}
+        />
+      );
+    case "CustomView":
+      return renderComponent(appState.app.customViews[properties.viewName]);
+
     default:
       return null;
   }
 };
 
 const DynamicApp = () => {
-  const [app, setApp] = useState(appJSON.app);
-
-  useEffect(() => {
-    console.log("app", app);
-    if (appState === null) appState = new AppState(app, setApp);
-  }, []);
-
-  return renderComponent(appState?.app);
+  const [app, setApp] = useState(appJSON?.app);
+  if (appState === null) appState = new AppState(app, setApp);
+  return renderComponent(app);
 };
 
 export default DynamicApp;
@@ -223,80 +224,114 @@ export default {
 ```
 
 ```javascript
-// utils/AppState.js
+// appFunctions/index.js
+import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
+
 import * as appFunctions from "../appFunctions";
+import objectService from "../services/objectService";
 
-export class AppState {
-  constructor(app, setAppState) {
-    this.app = app;
-    this.setAppState = setAppState;
-    this._initEvents(app);
-    this.formInstances = {};
+export function updateEndDateRestriction(form, fieldConfig, appState) {
+  const startDate = form.getFieldValue("startDate");
+  const endDate = form.getFieldValue("endDate");
+
+  // Clear the end date if it is before the start date
+  if (startDate && endDate && startDate.isAfter(endDate)) {
+    form.setFields([
+      {
+        name: "endDate",
+        value: null,
+      },
+    ]);
   }
 
-  setFormInstance(formName, formInstance) {
-    this.formInstances[formName] = formInstance;
-  }
+  // Disable dates before the start date for the end date
+  const disableEndDate = (current) => {
+    return current && current.isBefore(startDate, "day");
+  };
 
-  getFormInstance(formName) {
-    return this.formInstances?.[formName];
-  }
+  // Update the 'disabledDate' property for the 'endDate' field
+  form.setFields([
+    {
+      name: "endDate",
+      disabledDate: disableEndDate,
+    },
+  ]);
+}
 
-  _initEvents(obj) {
-    // If the object has an onInit event, call it
-    if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
-      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
-        appFunctions[obj.onInit](this);
-      } else if (obj.type !== "Form") {
-        appFunctions[obj.onInit](this);
-      }
+export const submitObject = async (formData, appState) => {
+  try {
+    // Check if formData has an id
+    if (formData.id) {
+      // Update the existing project
+      await objectService.updateObject(formData.id, formData);
+    } else {
+      // Create a new project
+      await objectService.createObject(formData);
     }
 
-    // Recursively call _initEvents on children
-    if (obj.children) {
-      obj.children.forEach((child) => this._initEvents(child));
-    }
-  }
+    // Reload the project data to reflect changes
+    await appFunctions.loadProjectData(appState);
 
-  changeComponent(componentName, newProperties) {
-    this.setAppState((prevApp) => {
-      const updatedApp = { ...prevApp };
-      this._updateComponent(updatedApp, componentName, newProperties);
-      return updatedApp;
+    // Handle UI changes, like showing a success notification
+  } catch (error) {
+    console.error("Error submitting project:", error);
+    // Handle errors, for example, show an error notification
+  }
+};
+
+export const loadProjectData = async (appState) => {
+  try {
+    console.log("loadProjectData");
+    const projects = await objectService.getAllObjects();
+    appState.changeComponent("projectOverviewTable", {
+      properties: { options: projects },
     });
+  } catch (error) {
+    console.error("Error loading project data:", error);
+    // Handle errors (e.g., show error message)
   }
+};
 
-  _updateComponent(obj, componentName, newProperties) {
-    if (obj.name === componentName) {
-      obj.properties = { ...obj.properties, ...newProperties };
-      return;
-    }
+export function initializeDateValuesForForm(form, record) {
+  const newRecord = { ...record };
+  const formItems = form.items;
 
-    if (obj.children) {
-      obj.children.forEach((child) => {
-        this._updateComponent(child, componentName, newProperties);
-      });
-    }
-  }
-
-  getComponent(componentName) {
-    const component = this._findComponent(this.app, componentName);
-    if (component.type === "Form" && this.formInstances?.[componentName]) {
-      component.formInstance = this.formInstances[componentName];
-    }
-
-    return component;
-  }
-
-  _findComponent(obj, name) {
-    if (obj.name === name) return obj;
-    if (obj.children) {
-      for (const child of obj.children) {
-        const found = this._findComponent(child, name);
-        if (found) return found;
+  formItems.forEach((item) => {
+    if (item.type === "DatePicker") {
+      const fieldName = item.name;
+      if (newRecord[fieldName]) {
+        newRecord[fieldName] = dayjs(newRecord[fieldName]);
       }
     }
-    return null;
+  });
+
+  return newRecord;
+}
+
+export const populateProjectFormOnSelection = (record, rowIndex, appState) => {
+  console.log("Row selected:", record, rowIndex);
+  const projectForm = appState.getComponent("projectForm");
+
+  if (projectForm && projectForm.formInstance) {
+    const formattedRecord = initializeDateValuesForForm(projectForm, record);
+    projectForm.formInstance.setFieldsValue(formattedRecord);
+  } else {
+    console.error("Project form or form instance not found");
+  }
+};
+
+export function onInitProjectForm(appState) {
+  console.log("onInitProjectForm");
+  const projectForm = appState.getComponent("projectForm");
+
+  if (projectForm && projectForm.formInstance) {
+    const randomGuid = uuidv4();
+    projectForm.formInstance.setFieldsValue({
+      id: randomGuid,
+    });
+  } else {
+    console.error("Project form or form instance not found");
   }
 }
 ```
@@ -317,12 +352,38 @@ const DynamicForm = ({ component, appState }) => {
     if (currentFormInstance !== form) {
       appState.setFormInstance(component.name, form);
       // Initialize events after the form instance is set
-      if (currentFormInstance === null) appState._initEvents(component);
+      if (currentFormInstance === null && component.onInit)
+        appFunctions[component.onInit](appState);
     }
     return () => {
       appState.setFormInstance(component.name, null);
     };
   }, []);
+
+  const renderFormItem = (item) => {
+    // Switch statement to render form input based on type
+    const formInput = (() => {
+      switch (item.type) {
+        case "Input":
+          return <Input />;
+        case "DatePicker":
+          return <DatePicker />;
+        case "Select":
+          return <Select {...item.properties} />;
+        case "TextArea":
+          return <TextArea />;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <Form.Item {...item} key={item.name}>
+        {formInput}
+      </Form.Item>
+    );
+  };
+
   return (
     <Form
       form={form}
@@ -334,8 +395,8 @@ const DynamicForm = ({ component, appState }) => {
         changedFields.forEach((field) => {
           const fieldName = field.name[field.name.length - 1];
           // Check if the changed field has a linked function and execute it
-          const fieldConfig = component.properties.items.find(
-            (item) => item.properties.name === fieldName
+          const fieldConfig = component.items.find(
+            (item) => item.name === fieldName
           );
           if (
             fieldConfig &&
@@ -347,58 +408,7 @@ const DynamicForm = ({ component, appState }) => {
         });
       }}
     >
-      {component.properties.items.map((item) => {
-        switch (item.type) {
-          case "Input":
-            return (
-              <Form.Item
-                key={item.properties.name}
-                name={item.properties.name}
-                label={item.label}
-              >
-                <Input />
-              </Form.Item>
-            );
-          case "DatePicker":
-            return (
-              <Form.Item
-                key={item.properties.name}
-                name={item.properties.name}
-                label={item.label}
-              >
-                <DatePicker />
-              </Form.Item>
-            );
-          case "Select":
-            return (
-              <Form.Item
-                key={item.properties.name}
-                name={item.properties.name}
-                label={item.label}
-              >
-                <Select>
-                  {item.options.map((option) => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            );
-          case "TextArea":
-            return (
-              <Form.Item
-                key={item.properties.name}
-                name={item.properties.name}
-                label={item.label}
-              >
-                <TextArea />
-              </Form.Item>
-            );
-          default:
-            return null;
-        }
-      })}
+      {component.items.map(renderFormItem)}
       <Form.Item>
         <Button {...component.properties.submitButton.properties}>
           {component.properties.submitButton.properties.text}
@@ -435,7 +445,7 @@ app json:
               "mode": "horizontal",
               "defaultSelectedKeys": ["Home"]
             },
-            "children": [
+            "items": [
               {
                 "type": "MenuItem",
                 "name": "menuItemHome",
@@ -647,7 +657,22 @@ app json:
                         "label": "Status",
                         "type": "Select",
                         "name": "status",
-                        "options": ["Planning", "Active", "Completed"],
+                        "properties": {
+                          "options": [
+                            {
+                              "label": "Planning",
+                              "value": "Planning"
+                            },
+                            {
+                              "label": "Active",
+                              "value": "Active"
+                            },
+                            {
+                              "label": "Completed",
+                              "value": "Completed"
+                            }
+                          ]
+                        },
                         "rules": [
                           {
                             "required": true,
@@ -735,6 +760,173 @@ app json:
                       },
                       "populateProjectFormOnSelection": {
                         "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TeamsView": {
+        "type": "Row",
+        "name": "teamRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "teamLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamCard",
+                "properties": {
+                  "title": "Team Management"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "teamForm",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitTeamData",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitTeamButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Create Team",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Team Name",
+                        "type": "Input",
+                        "name": "teamName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the team name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Leader",
+                        "type": "Input",
+                        "name": "teamLeader",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the name of the team leader!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Members",
+                        "type": "Select",
+                        "name": "teamMembers",
+                        "properties": {
+                          "mode": "multiple",
+                          "placeholder": "Select team members",
+                          "options": [
+                            {
+                              "label": "Member 1",
+                              "value": "member1"
+                            },
+                            {
+                              "label": "Member 2",
+                              "value": "member2"
+                            },
+                            {
+                              "label": "Member 3",
+                              "value": "member3"
+                            }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select team members!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Description",
+                        "type": "TextArea",
+                        "name": "description",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the description!"
+                          }
+                        ]
+                      }
+                    ],
+                    "functions": {
+                      "submitTeamData": {
+                        "description": "This function handles the submission of new team data to the backend."
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "teamRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamOverviewCard",
+                "properties": {
+                  "title": "Teams Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "teamOverviewTable",
+                    "properties": {
+                      "columns": [
+                        {
+                          "title": "Team Name",
+                          "dataIndex": "teamName",
+                          "key": "teamName"
+                        },
+                        {
+                          "title": "Team Leader",
+                          "dataIndex": "teamLeader",
+                          "key": "teamLeader"
+                        },
+                        {
+                          "title": "Number of Members",
+                          "dataIndex": "numberOfMembers",
+                          "key": "numberOfMembers"
+                        },
+                        {
+                          "title": "Description",
+                          "dataIndex": "description",
+                          "key": "description"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadTeamData",
+                    "functions": {
+                      "loadTeamData": {
+                        "description": "Function to load team data into the table."
                       }
                     }
                   }

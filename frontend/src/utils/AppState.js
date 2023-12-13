@@ -1,44 +1,31 @@
 // utils/AppState.js
-import * as appFunctions from "../appFunctions";
-
 export class AppState {
   constructor(app, setAppState) {
     this.app = app;
     this.setAppState = setAppState;
-    this._initEvents(app);
-    this.formInstances = {};
+    this.componentInstances = {};
+  }
+  setState(app, setAppState) {
+    this.app = app;
+    this.setAppState = setAppState;
+  }
+  setComponentInstance(componentName, componentInstance) {
+    this.componentInstances[componentName] = componentInstance;
   }
 
-  setFormInstance(formName, formInstance) {
-    this.formInstances[formName] = formInstance;
-  }
-
-  getFormInstance(formName) {
-    return this.formInstances?.[formName];
-  }
-
-  _initEvents(obj) {
-    // If the object has an onInit event, call it
-    if (obj.onInit && typeof appFunctions[obj.onInit] === "function") {
-      // Only call onInit for Forms that have a form instance
-      // (i.e., the Form is rendered in the UI)
-      if (obj.type === "Form" && this.getFormInstance(obj.name)) {
-        appFunctions[obj.onInit](this);
-      } else if (obj.type !== "Form") {
-        appFunctions[obj.onInit](this);
-      }
-    }
-
-    // Recursively call _initEvents on children
-    if (obj.children) {
-      obj.children.forEach((child) => this._initEvents(child));
-    }
+  getComponentInstance(componentName) {
+    return this.componentInstances?.[componentName];
   }
 
   changeComponent(componentName, newProperties) {
     this.setAppState((prevApp) => {
       const updatedApp = { ...prevApp };
       this._updateComponent(updatedApp, componentName, newProperties);
+      this._updateCustomViewComponent(
+        updatedApp.customViews,
+        componentName,
+        newProperties
+      );
       return updatedApp;
     });
   }
@@ -46,7 +33,7 @@ export class AppState {
   _updateComponent(obj, componentName, newProperties) {
     if (obj.name === componentName) {
       obj.properties = { ...obj.properties, ...newProperties };
-      return;
+      return true;
     }
 
     if (obj.children) {
@@ -56,9 +43,25 @@ export class AppState {
     }
   }
 
+  _updateCustomViewComponent(customViews, componentName, newProperties) {
+    Object.values(customViews).forEach((view) => {
+      this._updateComponent(view, componentName, newProperties);
+    });
+  }
+
   getComponent(componentName) {
-    const component = this._findComponent(this.app, componentName);
-    if (component.type === "Form" && this.formInstances?.[componentName]) {
+    let component = this._findComponent(this.app, componentName);
+
+    // Check in customViews if not found in regular structure
+    if (!component && this.app.customViews) {
+      component = this._findComponent(this.app.customViews, componentName);
+    }
+
+    if (
+      component &&
+      component.type === "Form" &&
+      this.formInstances?.[componentName]
+    ) {
       component.formInstance = this.formInstances[componentName];
     }
 
@@ -67,7 +70,8 @@ export class AppState {
 
   _findComponent(obj, name) {
     if (obj.name === name) return obj;
-    if (obj.children) {
+    const children = obj.children || obj.items;
+    if (children) {
       for (const child of obj.children) {
         const found = this._findComponent(child, name);
         if (found) return found;

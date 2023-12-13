@@ -19,7 +19,7 @@
               "mode": "horizontal",
               "defaultSelectedKeys": ["Home"]
             },
-            "children": [
+            "items": [
               {
                 "type": "MenuItem",
                 "name": "menuItemHome",
@@ -231,7 +231,22 @@
                         "label": "Status",
                         "type": "Select",
                         "name": "status",
-                        "options": ["Planning", "Active", "Completed"],
+                        "properties": {
+                          "options": [
+                            {
+                              "label": "Planning",
+                              "value": "Planning"
+                            },
+                            {
+                              "label": "Active",
+                              "value": "Active"
+                            },
+                            {
+                              "label": "Completed",
+                              "value": "Completed"
+                            }
+                          ]
+                        },
                         "rules": [
                           {
                             "required": true,
@@ -319,6 +334,173 @@
                       },
                       "populateProjectFormOnSelection": {
                         "description": "This function is activated when a user selects a project row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected project, enabling the user to edit project details. It includes error handling for scenarios where project data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of project data directly from the overview table."
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TeamsView": {
+        "type": "Row",
+        "name": "teamRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "teamLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamCard",
+                "properties": {
+                  "title": "Team Management"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "teamForm",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitTeamData",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitTeamButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Create Team",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Team Name",
+                        "type": "Input",
+                        "name": "teamName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the team name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Leader",
+                        "type": "Input",
+                        "name": "teamLeader",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the name of the team leader!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Members",
+                        "type": "Select",
+                        "name": "teamMembers",
+                        "properties": {
+                          "mode": "multiple",
+                          "placeholder": "Select team members",
+                          "options": [
+                            {
+                              "label": "Member 1",
+                              "value": "member1"
+                            },
+                            {
+                              "label": "Member 2",
+                              "value": "member2"
+                            },
+                            {
+                              "label": "Member 3",
+                              "value": "member3"
+                            }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select team members!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Description",
+                        "type": "TextArea",
+                        "name": "description",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the description!"
+                          }
+                        ]
+                      }
+                    ],
+                    "functions": {
+                      "submitTeamData": {
+                        "description": "This function handles the submission of new team data to the backend."
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "teamRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamOverviewCard",
+                "properties": {
+                  "title": "Teams Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "teamOverviewTable",
+                    "properties": {
+                      "columns": [
+                        {
+                          "title": "Team Name",
+                          "dataIndex": "teamName",
+                          "key": "teamName"
+                        },
+                        {
+                          "title": "Team Leader",
+                          "dataIndex": "teamLeader",
+                          "key": "teamLeader"
+                        },
+                        {
+                          "title": "Number of Members",
+                          "dataIndex": "numberOfMembers",
+                          "key": "numberOfMembers"
+                        },
+                        {
+                          "title": "Description",
+                          "dataIndex": "description",
+                          "key": "description"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadTeamData",
+                    "functions": {
+                      "loadTeamData": {
+                        "description": "Function to load team data into the table."
                       }
                     }
                   }

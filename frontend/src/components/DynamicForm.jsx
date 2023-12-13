@@ -9,14 +9,16 @@ const { TextArea } = Input;
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
   useEffect(() => {
-    const currentFormInstance = appState.getFormInstance(component.name);
-    if (currentFormInstance !== form) {
-      appState.setFormInstance(component.name, form);
-      // Initialize events after the form instance is set
-      if (currentFormInstance === null) appState._initEvents(component);
+    const currentComponentInstance = appState.getComponentInstance(
+      component.name
+    );
+    if (currentComponentInstance !== form) {
+      appState.setComponentInstance(component.name, form);
+      if (currentComponentInstance === null && component.onInit)
+        appFunctions[component.onInit](appState);
     }
     return () => {
-      appState.setFormInstance(component.name, null);
+      appState.setComponentInstance(component.name, null);
     };
   }, []);
 
@@ -29,15 +31,7 @@ const DynamicForm = ({ component, appState }) => {
         case "DatePicker":
           return <DatePicker />;
         case "Select":
-          return (
-            <Select>
-              {item.options.map((option) => (
-                <Option key={option} value={option}>
-                  {option}
-                </Option>
-              ))}
-            </Select>
-          );
+          return <Select {...item.properties} />;
         case "TextArea":
           return <TextArea />;
         default:
@@ -46,7 +40,7 @@ const DynamicForm = ({ component, appState }) => {
     })();
 
     return (
-      <Form.Item {...item} key={item.name}>
+      <Form.Item {...item} key={item.name} onChange={undefined}>
         {formInput}
       </Form.Item>
     );
