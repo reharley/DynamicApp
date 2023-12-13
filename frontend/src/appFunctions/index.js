@@ -33,19 +33,23 @@ export function updateEndDateRestriction(form, fieldConfig, appState) {
   ]);
 }
 
-export const submitObject = async (formData, appState) => {
+export const submitObject = async (formData, appState, component) => {
   try {
     // Check if formData has an id
     if (formData.id) {
       // Update the existing project
-      await objectService.updateObject(formData.id, formData);
+      await objectService.updateObject(
+        component.objectType,
+        formData.id,
+        formData
+      );
     } else {
       // Create a new project
-      await objectService.createObject(formData);
+      await objectService.createObject(component.objectType, formData);
     }
 
     // Reload the project data to reflect changes
-    await appFunctions.loadProjectData(appState);
+    await appFunctions.loadObjectData(appState, component);
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
@@ -54,11 +58,11 @@ export const submitObject = async (formData, appState) => {
   }
 };
 
-export const loadProjectData = async (appState) => {
+export const loadObjectData = async (appState, component) => {
   try {
-    console.log("loadProjectData");
-    const projects = await objectService.getAllObjects();
-    appState.changeComponent("projectOverviewTable", { dataSource: projects });
+    const objects = await objectService.getAllObjects(component.objectType);
+    console.log(component.name, objects);
+    appState.changeComponent(component.name, { dataSource: objects });
   } catch (error) {
     console.error("Error loading project data:", error);
     // Handle errors (e.g., show error message)

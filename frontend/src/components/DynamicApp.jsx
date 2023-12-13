@@ -22,7 +22,7 @@ const RenderComponent = ({ component }) => {
   if (currentComponentInstance !== componentRef) {
     appState.setComponentInstance(component.name, componentRef);
     if (currentComponentInstance === undefined && component.onInit) {
-      appFunctions[component.onInit](appState);
+      appFunctions[component.onInit](appState, component);
     }
   }
   const { type, children } = component;

@@ -51,7 +51,7 @@ const DynamicForm = ({ component, appState }) => {
       form={form}
       layout={component.properties.layout}
       onFinish={(values) =>
-        appFunctions[component.properties.onSubmit](values, appState)
+        appFunctions[component.properties.onSubmit](values, appState, component)
       }
       onFieldsChange={(changedFields, allFields) => {
         changedFields.forEach((field) => {

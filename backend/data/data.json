@@ -1,18 +1,32 @@
-[
-    {
-        "projectName": "Project Jones",
-        "startDate": "2023-12-12T06:57:58.588Z",
-        "endDate": "2024-01-02T07:46:15.814Z",
-        "status": "Planning",
-        "description": "Execute order 66.",
-        "id": 1
-    },
-    {
-        "id": 2,
-        "projectName": "Project Golden-Eye",
-        "startDate": "2024-01-31T06:57:58.588Z",
-        "endDate": "2023-12-27T07:10:36.336Z",
-        "status": "Planning",
-        "description": "007 gets a new  job and does it."
-    }
-]
+{
+    "Project": [
+        {
+            "projectName": "Project Jones",
+            "startDate": "2023-12-12T06:57:58.588Z",
+            "endDate": "2024-01-02T07:46:15.814Z",
+            "status": "Planning",
+            "description": "Execute order 66.",
+            "id": 1
+        },
+        {
+            "id": 2,
+            "projectName": "Project Golden-Eye",
+            "startDate": "2024-01-31T06:57:58.588Z",
+            "endDate": "2023-12-27T07:10:36.336Z",
+            "status": "Planning",
+            "description": "007 gets a new  job and does it."
+        }
+    ],
+    "Team": [
+        {
+            "teamName": "Team A",
+            "teamLeader": "Jenkins",
+            "teamMembers": [
+                "member2",
+                "member1"
+            ],
+            "description": "Best team in the business.",
+            "id": 1
+        }
+    ]
+}

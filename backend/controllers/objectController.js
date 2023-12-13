@@ -14,24 +14,32 @@ const writeData = (data) => {
 
 // CRUD operations
 exports.getAllObjects = (req, res) => {
-  console.log("getAllObjects");
-  const data = readData();
+  const type = req.params.type;
+  console.log("getAllObjects", type);
+
+  let data = readData();
+  if (type) data = data[type] ?? [];
+  console.log("data", data);
   res.json(data);
 };
 
 exports.createObject = (req, res) => {
-  console.log("createObject");
+  const type = req.params.type;
+  console.log("createObject", type);
   const newObject = req.body; // Assuming the new object data is sent in the request body
 
   // Read existing data
   const data = readData();
+  if (data[type] === undefined) data[type] = [];
+  let objects = data[type];
 
   // Generate a new ID for the object
-  const newObjectId = data.length > 0 ? data[data.length - 1].id + 1 : 1;
+  const newObjectId =
+    objects.length > 0 ? objects[objects.length - 1].id + 1 : 1;
 
   // Add the new object to the data
   newObject.id = newObjectId;
-  data.push(newObject);
+  objects.push(newObject);
 
   // Write the updated data back to the file
   writeData(data);
@@ -41,12 +49,14 @@ exports.createObject = (req, res) => {
 };
 
 exports.updateObject = (req, res) => {
-  console.log("updateObject");
+  const type = req.params.type;
+  console.log("updateObject", type);
   const objectId = req.params.id; // Assuming the object ID is sent as a URL parameter
   const updatedObject = req.body; // Assuming the updated object data is sent in the request body
 
   // Read existing data
-  const data = readData();
+  let data = readData();
+  if (type) data = data[type] ?? [];
 
   // Find the object with the given ID
   const objectIndex = data.findIndex(
@@ -72,11 +82,13 @@ exports.updateObject = (req, res) => {
 };
 
 exports.deleteObject = (req, res) => {
-  console.log("deleteObject");
+  const type = req.params.type;
+  console.log("deleteObject", type);
   const objectId = req.params.id; // Assuming the object ID is sent as a URL parameter
 
   // Read existing data
-  const data = readData();
+  let data = readData();
+  if (type) data = data[type] ?? [];
 
   // Find the object with the given ID
   const objectIndex = data.findIndex(

@@ -1,6 +1,4 @@
-Refactor renderComponent into a functional component so that it can call the onInit function of that component. An example of this is DynamicForm where is sets the form instance and runs the initialization event.
-
-When refactoring, rename getFormInstance and setFormInstance into getComponentInstance and setComponentInstance and reuse those functions for RenderComponent
+Add the submitObject function to the teamForm
 
 ```javascript
 // utils/AppState.js
@@ -8,21 +6,29 @@ export class AppState {
   constructor(app, setAppState) {
     this.app = app;
     this.setAppState = setAppState;
-    this.formInstances = {};
+    this.componentInstances = {};
+  }
+  setState(app, setAppState) {
+    this.app = app;
+    this.setAppState = setAppState;
+  }
+  setComponentInstance(componentName, componentInstance) {
+    this.componentInstances[componentName] = componentInstance;
   }
 
-  setFormInstance(formName, formInstance) {
-    this.formInstances[formName] = formInstance;
-  }
-
-  getFormInstance(formName) {
-    return this.formInstances?.[formName];
+  getComponentInstance(componentName) {
+    return this.componentInstances?.[componentName];
   }
 
   changeComponent(componentName, newProperties) {
     this.setAppState((prevApp) => {
       const updatedApp = { ...prevApp };
       this._updateComponent(updatedApp, componentName, newProperties);
+      this._updateCustomViewComponent(
+        updatedApp.customViews,
+        componentName,
+        newProperties
+      );
       return updatedApp;
     });
   }
@@ -30,7 +36,7 @@ export class AppState {
   _updateComponent(obj, componentName, newProperties) {
     if (obj.name === componentName) {
       obj.properties = { ...obj.properties, ...newProperties };
-      return;
+      return true;
     }
 
     if (obj.children) {
@@ -38,6 +44,12 @@ export class AppState {
         this._updateComponent(child, componentName, newProperties);
       });
     }
+  }
+
+  _updateCustomViewComponent(customViews, componentName, newProperties) {
+    Object.values(customViews).forEach((view) => {
+      this._updateComponent(view, componentName, newProperties);
+    });
   }
 
   getComponent(componentName) {
@@ -75,7 +87,7 @@ export class AppState {
 
 ```javascript
 // components/DynamicApp.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, Routes, Route } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
@@ -88,15 +100,31 @@ const { Header, Content, Footer } = Layout;
 
 let appState = null;
 
-const renderComponent = (component) => {
+const RenderComponent = ({ component }) => {
+  const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
+
+  const currentComponentInstance = appState.getComponentInstance(
+    component.name
+  );
+  if (currentComponentInstance !== componentRef) {
+    appState.setComponentInstance(component.name, componentRef);
+    if (currentComponentInstance === undefined && component.onInit) {
+      appFunctions[component.onInit](appState, component);
+    }
+  }
   const { type, children } = component;
   let properties = component.properties ?? {};
 
   const commonProps = {
     ...properties,
+    ref: type !== "Form" ? componentRef : undefined,
     component,
-    children: children && children.map((child) => renderComponent(child)),
+    children:
+      children &&
+      children.map((child) => (
+        <RenderComponent key={child.name} component={child} />
+      )),
   };
 
   switch (type) {
@@ -163,17 +191,23 @@ const renderComponent = (component) => {
       );
 
     case "Routes":
-      return <Routes>{children.map((child) => renderComponent(child))}</Routes>;
-
-    case "Route":
       return (
-        <Route
-          path={properties.path}
-          element={renderComponent(properties.element)}
-        />
+        <Routes {...commonProps}>
+          {children.map((child) => (
+            <Route
+              key={child.name}
+              path={child.properties.path}
+              element={<RenderComponent component={child.properties.element} />}
+            />
+          ))}
+        </Routes>
       );
     case "CustomView":
-      return renderComponent(appState.app.customViews[properties.viewName]);
+      return (
+        <RenderComponent
+          component={appState.app.customViews[properties.viewName]}
+        />
+      );
 
     default:
       return null;
@@ -183,7 +217,8 @@ const renderComponent = (component) => {
 const DynamicApp = () => {
   const [app, setApp] = useState(appJSON?.app);
   if (appState === null) appState = new AppState(app, setApp);
-  return renderComponent(app);
+  appState.setState(app, setApp);
+  return <RenderComponent component={app} />;
 };
 
 export default DynamicApp;
@@ -195,23 +230,29 @@ import axios from "axios";
 
 const baseUrl = "http://localhost:3001/api";
 
-const getAllObjects = async () => {
-  const response = await axios.get(`${baseUrl}/objects`);
+const getAllObjects = async (objectName) => {
+  const response = await axios.get(`${baseUrl}/objects/${objectName}`);
   return response.data;
 };
 
-const createObject = async (newObject) => {
-  const response = await axios.post(`${baseUrl}/objects`, newObject);
+const createObject = async (objectName, newObject) => {
+  const response = await axios.post(
+    `${baseUrl}/objects/${objectName}`,
+    newObject
+  );
   return response.data;
 };
 
-const updateObject = async (id, updatedObject) => {
-  const response = await axios.put(`${baseUrl}/objects/${id}`, updatedObject);
+const updateObject = async (objectName, id, updatedObject) => {
+  const response = await axios.put(
+    `${baseUrl}/objects/${objectName}/${id}`,
+    updatedObject
+  );
   return response.data;
 };
 
-const deleteObject = async (id) => {
-  const response = await axios.delete(`${baseUrl}/objects/${id}`);
+const deleteObject = async (objectName, id) => {
+  const response = await axios.delete(`${baseUrl}/objects/${objectName}/${id}`);
   return response.data;
 };
 
@@ -259,19 +300,23 @@ export function updateEndDateRestriction(form, fieldConfig, appState) {
   ]);
 }
 
-export const submitObject = async (formData, appState) => {
+export const submitObject = async (formData, appState, component) => {
   try {
     // Check if formData has an id
     if (formData.id) {
       // Update the existing project
-      await objectService.updateObject(formData.id, formData);
+      await objectService.updateObject(
+        component.objectType,
+        formData.id,
+        formData
+      );
     } else {
       // Create a new project
-      await objectService.createObject(formData);
+      await objectService.createObject(component.objectType, formData);
     }
 
     // Reload the project data to reflect changes
-    await appFunctions.loadProjectData(appState);
+    await appFunctions.loadProjectData(appState, component);
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
@@ -280,16 +325,26 @@ export const submitObject = async (formData, appState) => {
   }
 };
 
-export const loadProjectData = async (appState) => {
+export const loadProjectData = async (appState, component) => {
   try {
-    console.log("loadProjectData");
-    const projects = await objectService.getAllObjects();
-    appState.changeComponent("projectOverviewTable", {
-      properties: { options: projects },
-    });
+    const projects = await objectService.getAllObjects(component.objectType);
+    appState.changeComponent("projectOverviewTable", { dataSource: projects });
   } catch (error) {
     console.error("Error loading project data:", error);
     // Handle errors (e.g., show error message)
+  }
+};
+
+export const loadTeamData = async (appState, component) => {
+  try {
+    // Assuming you have a similar function in your objectService to fetch team data
+    const teams = await objectService.getAllObjects(component.objectType);
+
+    // Update the 'teamOverviewTable' component with the fetched team data
+    appState.changeComponent("teamOverviewTable", { dataSource: teams });
+  } catch (error) {
+    console.error("Error loading team data:", error);
+    // Handle errors, for example, show an error notification
   }
 };
 
@@ -348,15 +403,16 @@ const { TextArea } = Input;
 const DynamicForm = ({ component, appState }) => {
   const [form] = Form.useForm();
   useEffect(() => {
-    const currentFormInstance = appState.getFormInstance(component.name);
-    if (currentFormInstance !== form) {
-      appState.setFormInstance(component.name, form);
-      // Initialize events after the form instance is set
-      if (currentFormInstance === null && component.onInit)
+    const currentComponentInstance = appState.getComponentInstance(
+      component.name
+    );
+    if (currentComponentInstance !== form) {
+      appState.setComponentInstance(component.name, form);
+      if (currentComponentInstance === null && component.onInit)
         appFunctions[component.onInit](appState);
     }
     return () => {
-      appState.setFormInstance(component.name, null);
+      appState.setComponentInstance(component.name, null);
     };
   }, []);
 
@@ -378,7 +434,7 @@ const DynamicForm = ({ component, appState }) => {
     })();
 
     return (
-      <Form.Item {...item} key={item.name}>
+      <Form.Item {...item} key={item.name} onChange={undefined}>
         {formInput}
       </Form.Item>
     );
@@ -389,7 +445,7 @@ const DynamicForm = ({ component, appState }) => {
       form={form}
       layout={component.properties.layout}
       onFinish={(values) =>
-        appFunctions[component.properties.onSubmit](values, appState)
+        appFunctions[component.properties.onSubmit](values, appState, component)
       }
       onFieldsChange={(changedFields, allFields) => {
         changedFields.forEach((field) => {
@@ -598,6 +654,7 @@ app json:
                   {
                     "type": "Form",
                     "name": "projectForm",
+                    "objectType": "Project",
                     "properties": {
                       "layout": "vertical",
                       "onSubmit": "submitObject",
@@ -725,6 +782,7 @@ app json:
                   {
                     "type": "Table",
                     "name": "projectOverviewTable",
+                    "objectType": "Project",
                     "properties": {
                       "onRow": {
                         "click": "populateProjectFormOnSelection"
@@ -793,6 +851,7 @@ app json:
                   {
                     "type": "Form",
                     "name": "teamForm",
+                    "objectType": "Team",
                     "properties": {
                       "layout": "vertical",
                       "onSubmit": "submitTeamData",
@@ -898,6 +957,7 @@ app json:
                   {
                     "type": "Table",
                     "name": "teamOverviewTable",
+                    "objectType": "Team",
                     "properties": {
                       "columns": [
                         {

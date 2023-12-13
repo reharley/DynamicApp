@@ -172,6 +172,7 @@
                   {
                     "type": "Form",
                     "name": "projectForm",
+                    "objectType": "Project",
                     "properties": {
                       "layout": "vertical",
                       "onSubmit": "submitObject",
@@ -299,6 +300,7 @@
                   {
                     "type": "Table",
                     "name": "projectOverviewTable",
+                    "objectType": "Project",
                     "properties": {
                       "onRow": {
                         "click": "populateProjectFormOnSelection"
@@ -327,9 +329,9 @@
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadProjectData",
+                    "onInit": "loadObjectData",
                     "functions": {
-                      "loadProjectData": {
+                      "loadObjectData": {
                         "description": "This function is called when the Project Overview table is initialized. It should fetch all project data from the backend using an API call, and then set this data as the dataSource for the table. The function must handle any errors during the fetch operation and provide appropriate fallbacks or error messages. This function will ensure that the table is populated with up-to-date project information as soon as the component loads."
                       },
                       "populateProjectFormOnSelection": {
@@ -367,9 +369,10 @@
                   {
                     "type": "Form",
                     "name": "teamForm",
+                    "objectType": "Team",
                     "properties": {
                       "layout": "vertical",
-                      "onSubmit": "submitTeamData",
+                      "onSubmit": "submitObject",
                       "submitButton": {
                         "type": "Button",
                         "name": "submitTeamButton",
@@ -382,6 +385,12 @@
                       }
                     },
                     "items": [
+                      {
+                        "label": "Team ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
                       {
                         "label": "Team Name",
                         "type": "Input",
@@ -472,6 +481,7 @@
                   {
                     "type": "Table",
                     "name": "teamOverviewTable",
+                    "objectType": "Team",
                     "properties": {
                       "columns": [
                         {
@@ -497,9 +507,9 @@
                       ],
                       "dataSource": []
                     },
-                    "onInit": "loadTeamData",
+                    "onInit": "loadObjectData",
                     "functions": {
-                      "loadTeamData": {
+                      "loadObjectData": {
                         "description": "Function to load team data into the table."
                       }
                     }
