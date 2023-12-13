@@ -1,6 +1,6 @@
 // components/DynamicApp.js
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Routes, Route } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
 import DynamicForm from "./DynamicForm";
@@ -85,6 +85,20 @@ const renderComponent = (component) => {
           ))}
         </Breadcrumb>
       );
+
+    case "Routes":
+      return <Routes>{children.map((child) => renderComponent(child))}</Routes>;
+
+    case "Route":
+      return (
+        <Route
+          path={properties.path}
+          element={renderComponent(properties.element)}
+        />
+      );
+    case "CustomView":
+      return renderComponent(appState.app.customViews[properties.viewName]);
+
     default:
       return null;
   }
@@ -92,11 +106,7 @@ const renderComponent = (component) => {
 
 const DynamicApp = () => {
   const [app, setApp] = useState(appJSON.app);
-
-  useEffect(() => {
-    console.log("app", app);
-    if (appState === null) appState = new AppState(app, setApp);
-  }, []);
+  if (appState === null) appState = new AppState(app, setApp);
 
   return renderComponent(appState?.app);
 };
