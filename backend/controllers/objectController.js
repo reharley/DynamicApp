@@ -19,7 +19,6 @@ exports.getAllObjects = (req, res) => {
 
   let data = readData();
   if (type) data = data[type] ?? [];
-  console.log("data", data);
   res.json(data);
 };
 
