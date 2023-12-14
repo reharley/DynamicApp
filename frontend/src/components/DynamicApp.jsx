@@ -1,10 +1,21 @@
 // components/DynamicApp.js
 import React, { useState, useRef } from "react";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
-import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
+import {
+  Layout,
+  Input,
+  Tabs,
+  Menu,
+  Breadcrumb,
+  Row,
+  Col,
+  Card,
+  Table,
+  Modal,
+} from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../data/project_manager.json";
+import appJSON from "../data/bookstore_app.json";
 import { AppState } from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 
@@ -19,11 +30,12 @@ const RenderComponent = ({ component }) => {
   const currentComponentInstance = appState.getComponentInstance(
     component.name
   );
-  if (component.onInit) console.log(component.onInit);
   if (currentComponentInstance !== componentRef) {
     appState.setComponentInstance(component.name, componentRef);
     if (currentComponentInstance === undefined && component.onInit) {
-      appFunctions[component.onInit](appState, component);
+      if (appFunctions[component.onInit] === undefined)
+        console.log(`Function ${component.onInit} not found`);
+      else appFunctions[component.onInit](appState, component);
     }
   }
   const { type, children } = component;
@@ -53,19 +65,13 @@ const RenderComponent = ({ component }) => {
       return <Col {...commonProps} />;
     case "Menu":
       return (
-        <Menu {...properties}>
-          {component.items &&
-            component.items.map((item) => {
-              if (item.type === "MenuItem") {
-                return (
-                  <Menu.Item key={item.properties.key}>
-                    <Link to={item.properties.link}>{item.text}</Link>
-                  </Menu.Item>
-                );
-              }
-              return null;
-            })}
-        </Menu>
+        <Menu
+          {...properties}
+          items={component.items.map((item) => ({
+            key: item.properties.key,
+            label: <Link to={item.properties.link}>{item.text}</Link>,
+          }))}
+        />
       );
     case "Card":
       return <Card {...commonProps} />;
@@ -127,8 +133,40 @@ const RenderComponent = ({ component }) => {
         />
       );
 
+    case "Tabs":
+      return (
+        <Tabs
+          {...commonProps}
+          items={component.items.map((item) => ({
+            ...item,
+            children: (
+              <>
+                {item.children.map((child) => {
+                  console.log("child", child);
+                  return <RenderComponent key={child.name} component={child} />;
+                })}
+              </>
+            ),
+          }))}
+        />
+      );
+    case "Search":
+      return (
+        <Input.Search
+          {...commonProps}
+          onSearch={(value) => {
+            if (component.onSearch && appFunctions[component.onSearch]) {
+              appFunctions[component.onSearch](value, appState, component);
+            } else {
+              console.log(
+                `Function ${component.onSearch} not found in appFunctions`
+              );
+            }
+          }}
+        />
+      );
     default:
-      return null;
+      return <React.Fragment />;
   }
 };
 

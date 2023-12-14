@@ -1,6 +1,6 @@
 // components/DynamicForm.jsx
-import React, { useEffect } from "react";
-import { Form, Input, DatePicker, Button, Select } from "antd";
+import React from "react";
+import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";
 
 const { Option } = Select;
@@ -15,7 +15,9 @@ const DynamicForm = ({ component, appState }) => {
   if (currentComponentInstance !== form) {
     appState.setComponentInstance(component.name, form);
     if (currentComponentInstance === undefined && component.onInit)
-      appFunctions[component.onInit](appState);
+      if (appFunctions[component.onInit] === undefined)
+        console.log(`Function ${component.onInit} not found`);
+      else appFunctions[component.onInit](appState);
   }
 
   const renderFormItem = (item) => {
@@ -23,15 +25,17 @@ const DynamicForm = ({ component, appState }) => {
     const formInput = (() => {
       switch (item.type) {
         case "Input":
-          return <Input />;
+          return <Input {...item.properties} />;
         case "DatePicker":
-          return <DatePicker />;
+          return <DatePicker {...item.properties} />;
         case "RangePicker":
-          return <RangePicker />;
+          return <RangePicker {...item.properties} />;
         case "Select":
           return <Select {...item.properties} />;
         case "TextArea":
-          return <TextArea />;
+          return <TextArea {...item.properties} />;
+        case "InputNumber":
+          return <InputNumber {...item.properties} />;
         default:
           return null;
       }
@@ -70,8 +74,8 @@ const DynamicForm = ({ component, appState }) => {
     >
       {component.items.map(renderFormItem)}
       <Form.Item>
-        <Button {...component.properties.submitButton.properties}>
-          {component.properties.submitButton.properties.text}
+        <Button {...component.properties.submitButton?.properties}>
+          {component.properties.submitButton?.properties?.text}
         </Button>
       </Form.Item>
     </Form>

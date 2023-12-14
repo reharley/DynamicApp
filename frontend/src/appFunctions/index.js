@@ -122,9 +122,8 @@ export function onInitProjectForm(appState) {
  * @param {Component} component - The component that triggered the event.
  */
 export function initMainMenu(appState, component) {
-  console.log("initMainMenu");
   // Retrieve the mainMenu component from the app state
-  const mainMenu = appState.getComponent("mainMenu");
+  const mainMenu = appState.getComponent(component.name);
   console.log("mainMenu", mainMenu);
   // Check if the mainMenu component is found
   if (!mainMenu) {
@@ -134,7 +133,6 @@ export function initMainMenu(appState, component) {
 
   // Get the current location's pathname
   const currentPath = appState.location.pathname;
-  console.log("currentPath", currentPath);
   // Derive the selected key based on the current route
   const selectedKey = mainMenu.items.find(
     (item) => item.properties.link === currentPath
@@ -142,7 +140,6 @@ export function initMainMenu(appState, component) {
 
   // If a selected key is found, update the mainMenu component
   if (selectedKey) {
-    console.log("Selected key:", selectedKey);
-    appState.changeComponent("mainMenu", { selectedKeys: [selectedKey] });
+    appState.changeComponent(component.name, { selectedKeys: [selectedKey] });
   }
 }
