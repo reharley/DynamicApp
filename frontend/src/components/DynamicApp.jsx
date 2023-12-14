@@ -4,7 +4,7 @@ import { Link, Routes, Route, useLocation } from "react-router-dom";
 import { Layout, Menu, Breadcrumb, Row, Col, Card, Table, Modal } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../data/sample_app3.json";
+import appJSON from "../data/project_manager.json";
 import { AppState } from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 

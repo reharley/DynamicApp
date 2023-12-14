@@ -1,36 +1,40 @@
 // services/objectService.js
 import axios from "axios";
 
-const baseUrl = "http://localhost:3001/api";
+const baseUrl = "http://localhost:3001";
 
-// Fetches all instances of a specified object type from the server.
-const getAllObjects = async (objectName) => {
-  const response = await axios.get(`${baseUrl}/objects/${objectName}`);
+// Helper function to send requests to the /object endpoint
+const sendObjectRequest = async (pluginType, action, objectName, data = {}) => {
+  const response = await axios.post(`${baseUrl}/object`, {
+    pluginType,
+    action,
+    params: { type: objectName },
+    body: data,
+  });
   return response.data;
 };
 
 // Fetches all instances of a specified object type from the server.
+const getAllObjects = async (objectName) => {
+  return sendObjectRequest("mock", "getAllObjects", objectName);
+};
+
+// Creates a new instance of a specified object type on the server.
 const createObject = async (objectName, newObject) => {
-  const response = await axios.post(
-    `${baseUrl}/objects/${objectName}`,
-    newObject
-  );
-  return response.data;
+  return sendObjectRequest("mock", "createObject", objectName, newObject);
 };
 
 // Updates an existing instance of a specified object type on the server.
 const updateObject = async (objectName, id, updatedObject) => {
-  const response = await axios.put(
-    `${baseUrl}/objects/${objectName}/${id}`,
-    updatedObject
-  );
-  return response.data;
+  return sendObjectRequest("mock", "updateObject", objectName, {
+    ...updatedObject,
+    id,
+  });
 };
 
 // Deletes an instance of a specified object type from the server.
 const deleteObject = async (objectName, id) => {
-  const response = await axios.delete(`${baseUrl}/objects/${objectName}/${id}`);
-  return response.data;
+  return sendObjectRequest("mock", "deleteObject", objectName, { id });
 };
 
 export default {

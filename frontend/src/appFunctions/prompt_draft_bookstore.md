@@ -1,0 +1,680 @@
+You are an
+
+In project_manager_app.json is an example application description using json
+
+project_manager_app.json
+
+```json
+{
+  "app": {
+    "type": "Layout",
+    "name": "mainLayout",
+    "properties": {
+      "style": { "layout": "vertical" }
+    },
+    "children": [
+      {
+        "type": "Header",
+        "name": "mainHeader",
+        "properties": {},
+        "children": [
+          {
+            "type": "Menu",
+            "name": "mainMenu",
+            "properties": {
+              "theme": "dark",
+              "mode": "horizontal",
+              "defaultSelectedKeys": ["Home"]
+            },
+            "items": [
+              {
+                "type": "MenuItem",
+                "name": "menuItemHome",
+                "properties": {
+                  "key": "Home",
+                  "link": "/"
+                },
+                "text": "Home"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemProjects",
+                "properties": {
+                  "key": "Projects",
+                  "link": "/projects"
+                },
+                "text": "Projects"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemTeams",
+                "properties": {
+                  "key": "Teams",
+                  "link": "/teams"
+                },
+                "text": "Teams"
+              },
+              {
+                "type": "MenuItem",
+                "name": "menuItemReports",
+                "properties": {
+                  "key": "Reports",
+                  "link": "/reports"
+                },
+                "text": "Reports"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Content",
+        "name": "mainContent",
+        "properties": {
+          "style": { "padding": "24px" }
+        },
+        "children": [
+          {
+            "type": "Routes",
+            "name": "mainRoutes",
+            "children": [
+              {
+                "type": "Route",
+                "name": "homeRoute",
+                "properties": {
+                  "path": "/",
+                  "element": {
+                    "type": "CustomView",
+                    "name": "projectsView",
+                    "properties": {
+                      "viewName": "ProjectsView"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "Route",
+                "name": "projectsRoute",
+                "properties": {
+                  "path": "/projects",
+                  "element": {
+                    "type": "CustomView",
+                    "name": "projectsView",
+                    "properties": {
+                      "viewName": "ProjectsView"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "Route",
+                "name": "teamsRoute",
+                "properties": {
+                  "path": "/teams",
+                  "element": {
+                    "type": "CustomView",
+                    "name": "teamsView",
+                    "properties": {
+                      "viewName": "TeamsView"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "Route",
+                "name": "reportsRoute",
+                "properties": {
+                  "path": "/reports",
+                  "element": {
+                    "type": "CustomView",
+                    "name": "reportsView",
+                    "properties": {
+                      "viewName": "ReportsView"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Footer",
+        "name": "mainFooter",
+        "properties": {
+          "text": "© 2023 Project Management Dashboard"
+        }
+      },
+      {
+        "type": "Modal",
+        "name": "notificationModal",
+        "properties": {
+          "title": "Notification",
+          "content": "Your changes have been saved."
+        }
+      }
+    ],
+    "customViews": {
+      "ProjectsView": {
+        "type": "Row",
+        "name": "mainRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "leftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "projectCard",
+                "properties": {
+                  "title": "New Project Entry"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "projectForm",
+                    "objectType": "Project",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitObject",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitProjectButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Submit",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Project ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
+                      {
+                        "label": "Project Name",
+                        "type": "Input",
+                        "name": "projectName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the project name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Start Date",
+                        "type": "DatePicker",
+                        "name": "startDate",
+                        "onChange": "updateEndDateRestriction",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the start date!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "End Date",
+                        "type": "DatePicker",
+                        "name": "endDate",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the end date!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Status",
+                        "type": "Select",
+                        "name": "status",
+                        "properties": {
+                          "options": [
+                            {
+                              "label": "Planning",
+                              "value": "Planning"
+                            },
+                            {
+                              "label": "Active",
+                              "value": "Active"
+                            },
+                            {
+                              "label": "Completed",
+                              "value": "Completed"
+                            }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the status!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Description",
+                        "type": "TextArea",
+                        "name": "description",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the description!"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "rightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "projectOverviewCard",
+                "properties": {
+                  "title": "Project Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "projectOverviewTable",
+                    "objectType": "Project",
+                    "objectFormName": "projectForm",
+                    "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
+                      "columns": [
+                        {
+                          "title": "Name",
+                          "dataIndex": "projectName",
+                          "key": "name"
+                        },
+                        {
+                          "title": "Status",
+                          "dataIndex": "status",
+                          "key": "status"
+                        },
+                        {
+                          "title": "Start Date",
+                          "dataIndex": "startDate",
+                          "key": "startDate"
+                        },
+                        {
+                          "title": "End Date",
+                          "dataIndex": "endDate",
+                          "key": "endDate"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadObjectData"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TeamsView": {
+        "type": "Row",
+        "name": "teamRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "teamLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamCard",
+                "properties": {
+                  "title": "Team Management"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "teamForm",
+                    "objectType": "Team",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitObject",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitTeamButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Create Team",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Team ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
+                      {
+                        "label": "Team Name",
+                        "type": "Input",
+                        "name": "teamName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the team name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Leader",
+                        "type": "Input",
+                        "name": "teamLeader",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the name of the team leader!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Team Members",
+                        "type": "Select",
+                        "name": "teamMembers",
+                        "properties": {
+                          "mode": "multiple",
+                          "placeholder": "Select team members",
+                          "options": [
+                            {
+                              "label": "Member 1",
+                              "value": "member1"
+                            },
+                            {
+                              "label": "Member 2",
+                              "value": "member2"
+                            },
+                            {
+                              "label": "Member 3",
+                              "value": "member3"
+                            }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select team members!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Description",
+                        "type": "TextArea",
+                        "name": "description",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the description!"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "teamRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "teamOverviewCard",
+                "properties": {
+                  "title": "Teams Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "teamOverviewTable",
+                    "objectType": "Team",
+                    "objectFormName": "teamForm",
+                    "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
+                      "columns": [
+                        {
+                          "title": "Team Name",
+                          "dataIndex": "teamName",
+                          "key": "teamName"
+                        },
+                        {
+                          "title": "Team Leader",
+                          "dataIndex": "teamLeader",
+                          "key": "teamLeader"
+                        },
+                        {
+                          "title": "Number of Members",
+                          "dataIndex": "numberOfMembers",
+                          "key": "numberOfMembers"
+                        },
+                        {
+                          "title": "Description",
+                          "dataIndex": "description",
+                          "key": "description"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadObjectData"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "ReportsView": {
+        "type": "Row",
+        "name": "reportsRow",
+        "properties": {
+          "gutter": 16
+        },
+        "children": [
+          {
+            "type": "Col",
+            "name": "reportsLeftColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportCreationCard",
+                "properties": {
+                  "title": "Report Creation"
+                },
+                "children": [
+                  {
+                    "type": "Form",
+                    "name": "reportForm",
+                    "objectType": "Report",
+                    "properties": {
+                      "layout": "vertical",
+                      "onSubmit": "submitObject",
+                      "submitButton": {
+                        "type": "Button",
+                        "name": "submitProjectButton",
+                        "properties": {
+                          "type": "primary",
+                          "htmlType": "submit",
+                          "text": "Submit",
+                          "name": "submitButton"
+                        }
+                      }
+                    },
+                    "items": [
+                      {
+                        "label": "Report ID",
+                        "type": "Input",
+                        "name": "id",
+                        "style": { "display": "none" }
+                      },
+                      {
+                        "label": "Report Name",
+                        "type": "Input",
+                        "name": "reportName",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please input the report name!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Date Range",
+                        "type": "RangePicker",
+                        "name": "dateRange",
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the date range!"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Report Type",
+                        "type": "Select",
+                        "name": "reportType",
+                        "properties": {
+                          "options": [
+                            { "label": "Type 1", "value": "type1" },
+                            { "label": "Type 2", "value": "type2" }
+                          ]
+                        },
+                        "rules": [
+                          {
+                            "required": true,
+                            "message": "Please select the report type!"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Col",
+            "name": "reportsRightColumn",
+            "properties": {
+              "span": 12
+            },
+            "children": [
+              {
+                "type": "Card",
+                "name": "reportsOverviewCard",
+                "properties": {
+                  "title": "Reports Overview"
+                },
+                "children": [
+                  {
+                    "type": "Table",
+                    "name": "reportsTable",
+                    "objectType": "Report",
+                    "objectFormName": "reportForm",
+                    "properties": {
+                      "onRow": {
+                        "click": "populateObjectFormOnSelection"
+                      },
+                      "columns": [
+                        {
+                          "title": "ID",
+                          "dataIndex": "id",
+                          "key": "id"
+                        },
+                        {
+                          "title": "Date Range",
+                          "dataIndex": "dateRange",
+                          "key": "dateRange"
+                        },
+                        {
+                          "title": "Report Type",
+                          "dataIndex": "reportType",
+                          "key": "reportType"
+                        }
+                      ],
+                      "dataSource": []
+                    },
+                    "onInit": "loadObjectData"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "functions": {
+      "initMainMenu": {
+        "description": "This function is triggered during the initialization of the 'mainMenu' component. It sets the 'selectedKey' of the menu to match the current route if the key exists. This ensures that the correct menu item is highlighted based on the current navigation context, enhancing the user experience by providing visual feedback on the active menu item."
+      },
+      "loadObjectData": {
+        "description": "This function is triggered when a component like a table or form is initialized. It fetches the relevant data for the specified object type (e.g., projects, teams) from the backend and updates the component's dataSource. This function ensures that the component displays the most current data as soon as it loads."
+      },
+      "populateObjectFormOnSelection": {
+        "description": "This function is activated when a user selects an object row in the 'projectOverviewTable'. It retrieves the data from the selected row and populates the 'projectForm' fields with this information for editing. The function ensures each form field corresponds to an attribute of the selected object, enabling the user to edit object details. It includes error handling for scenarios where object data is incomplete or fails to load, providing user-friendly feedback. This function is integral for maintaining a dynamic and interactive user experience, allowing real-time editing of object data directly from the overview table."
+      },
+      "submitObject": {
+        "description": "This function is responsible for submitting project data to the backend. It determines whether to create a new project or update an existing one based on the presence of an 'id' in the formData. If an 'id' is present, the function updates the project with the given 'id'; otherwise, it creates a new project. After successful submission or updating, the function reloads the project overview to ensure the displayed data is up-to-date. This approach maintains data integrity and ensures the user interface reflects the latest state of project data."
+      },
+      "updateEndDateRestriction": {
+        "description": "This function is triggered when the start date changes. It should ensure the end date cannot be before the start date, clearing the end date if it is before the start date, and disabling dates before the start date for the end date."
+      },
+      "onInitProjectForm": {
+        "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
+      }
+    },
+    "navigation": {
+      "type": "Breadcrumb",
+      "name": "mainBreadcrumb",
+      "properties": {
+        "items": [
+          { "name": "Home", "link": "/" },
+          { "name": "Projects", "link": "/projects" }
+        ]
+      }
+    }
+  }
+}
+```
