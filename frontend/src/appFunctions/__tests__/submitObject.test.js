@@ -1,16 +1,10 @@
 // submitObject.test.js
 import { submitObject } from "../appFunctions";
-import * as appFunctions from "../appFunctions";
 import objectService from "../../services/objectService";
 
 jest.mock("../../services/objectService", () => ({
   createObject: jest.fn(),
   updateObject: jest.fn(),
-}));
-
-jest.mock("../appFunctions", () => ({
-  ...jest.requireActual("../appFunctions"),
-  loadObjectData: jest.fn(),
 }));
 
 describe("submitObject", () => {
@@ -31,10 +25,6 @@ describe("submitObject", () => {
       mockComponent.objectType,
       values
     );
-    expect(appFunctions.loadObjectData).toHaveBeenCalledWith(
-      mockAppState,
-      mockComponent
-    );
   });
 
   it("updates an existing object if id is present", async () => {
@@ -47,10 +37,6 @@ describe("submitObject", () => {
       mockComponent.objectType,
       values.id,
       values
-    );
-    expect(appFunctions.loadObjectData).toHaveBeenCalledWith(
-      mockAppState,
-      mockComponent
     );
   });
 

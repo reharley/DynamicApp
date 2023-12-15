@@ -49,7 +49,7 @@ export const submitObject = async (values, appState, component) => {
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
-    console.error(`Error submitting ${component.name}:`, error);
+    console.error(`Error submitting ${component.objectType}:`, error);
     // Handle errors, for example, show an error notification
   }
 };
