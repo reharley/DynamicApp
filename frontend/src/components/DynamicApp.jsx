@@ -15,7 +15,7 @@ import {
 } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../data/bookstore_app.json";
+import appJSON from "../data/project_manager.json";
 import { AppState } from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 

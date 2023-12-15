@@ -59,15 +59,19 @@ const DynamicForm = ({ component, appState }) => {
         changedFields.forEach((field) => {
           const fieldName = field.name[field.name.length - 1];
           // Check if the changed field has a linked function and execute it
-          const fieldConfig = component.items.find(
+          const fieldComponent = component.items.find(
             (item) => item.name === fieldName
           );
           if (
-            fieldConfig &&
-            fieldConfig.onChange &&
-            appFunctions[fieldConfig.onChange]
+            fieldComponent &&
+            fieldComponent.onChange &&
+            appFunctions[fieldComponent.onChange]
           ) {
-            appFunctions[fieldConfig.onChange](form, fieldConfig, appState);
+            appFunctions[fieldComponent.onChange](
+              form,
+              fieldComponent,
+              appState
+            );
           }
         });
       }}

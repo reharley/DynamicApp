@@ -1,11 +1,11 @@
 // services/objectService.js
 import axios from "axios";
 
-const baseUrl = "http://localhost:3001";
+const baseUrl = "http://localhost:3001/api";
 
 // Helper function to send requests to the /object endpoint
 const sendObjectRequest = async (pluginType, action, objectName, data = {}) => {
-  const response = await axios.post(`${baseUrl}/object`, {
+  const response = await axios.post(`${baseUrl}/objects`, {
     pluginType,
     action,
     params: { type: objectName },

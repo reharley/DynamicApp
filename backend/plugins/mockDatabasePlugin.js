@@ -16,7 +16,7 @@ class MockDatabasePlugin {
   }
 
   getAllObjects(req, res) {
-    const type = req.params.type;
+    const type = req.body.params.type;
     console.log("getAllObjects", type);
 
     let data = this.readData();
