@@ -112,28 +112,52 @@ export function onInitProjectForm(appState, component) {
 }
 
 /**
- * Initializes the main menu by setting the selected key based on the current route.
+ * Initializes a message list item with data from the message list's dataSource.
  * @param {AppState} appState - The state of the application.
- * @param {Component} component - The component that triggered the event.
+ * @param {Component} component - The messageListItem component to initialize.
  */
-export function initMainMenu(appState, component) {
-  // Retrieve the mainMenu component from the app state
-  const mainMenu = appState.getComponent(component.name);
-  // Check if the mainMenu component is found
-  if (!mainMenu) {
-    console.error("MainMenu component not found.");
+export function onInitMessageListItem(appState, component) {
+  const dataItem = component.properties.dataItem;
+  const dataIndex = component.properties.dataIndex;
+
+  if (!dataItem) {
+    console.error("Data item not found for message list item initialization.");
     return;
   }
 
-  // Get the current location's pathname
-  const currentPath = appState.location.pathname;
-  // Derive the selected key based on the current route
-  const selectedKey = mainMenu.items.find(
-    (item) => item.properties.link === currentPath
-  )?.properties.key;
+  // Adjust component names based on dataIndex
+  const adjustedName = (baseName) => `${baseName}_${dataIndex}`;
 
-  // If a selected key is found, update the mainMenu component
-  if (selectedKey) {
-    appState.changeComponent(component.name, { selectedKeys: [selectedKey] });
+  // Update Title component
+  const listItemTitleName = adjustedName("listItemTitle");
+  appState.changeComponent(listItemTitleName, {
+    text: dataItem.role.toUpperCase(), // For example, setting text to role in uppercase
+  });
+
+  // Retrieve the avatar sources from listItemAvatar
+  const listItemAvatar = appState.getComponent(adjustedName("listItemAvatar"));
+  const avatarSrcs = listItemAvatar ? listItemAvatar.properties.srcs : {};
+
+  // Determine the correct avatar source based on the role
+  const avatarSrc = avatarSrcs[dataItem.role] || "";
+
+  // Update Avatar component
+  const avatarName = adjustedName("listItemAvatar");
+  appState.changeComponent(avatarName, { src: avatarSrc });
+
+  // Update Message Content
+  const messageContentName = adjustedName("messageContent");
+  appState.changeComponent(messageContentName, {
+    text: dataItem.content,
+  });
+
+  // Handle additional arguments for function type messages
+  if (dataItem.role === "function" && dataItem.args) {
+    const messageArgsName = adjustedName("messageArgs");
+    appState.changeComponent(messageArgsName, { src: dataItem.args });
+  } else {
+    // Hide messageArgs component if the role is not a function
+    const messageArgsName = adjustedName("messageArgs");
+    appState.changeComponent(messageArgsName, { style: { display: "none" } });
   }
 }

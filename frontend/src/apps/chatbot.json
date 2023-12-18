@@ -1,0 +1,172 @@
+{
+  "app": {
+    "type": "Layout",
+    "name": "chatbotLayout",
+    "properties": {
+      "style": { "layout": "vertical" }
+    },
+    "children": [
+      {
+        "type": "Header",
+        "name": "chatbotHeader",
+        "properties": {},
+        "children": [
+          {
+            "type": "Menu",
+            "name": "chatbotMenu",
+            "properties": {
+              "theme": "dark",
+              "mode": "horizontal",
+              "defaultSelectedKeys": ["Chat"]
+            },
+            "items": [
+              {
+                "type": "MenuItem",
+                "name": "chatbotMenuItem",
+                "properties": {
+                  "key": "Chat",
+                  "link": "/"
+                },
+                "text": "Chat"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Content",
+        "name": "chatbotContent",
+        "properties": {
+          "style": { "padding": "24px" }
+        },
+        "children": [
+          {
+            "type": "Card",
+            "name": "chatCard",
+            "properties": {
+              "title": "Chat with Our Bot"
+            },
+            "children": [
+              {
+                "type": "List",
+                "name": "messageList",
+                "properties": {
+                  "itemLayout": "vertical",
+                  "dataSource": [
+                    {
+                      "role": "system",
+                      "content": "You are...",
+                      "editable": false
+                    },
+                    {
+                      "role": "user",
+                      "content": "Kris: Okay",
+                      "editable": true
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "Go",
+                      "editable": false
+                    },
+                    {
+                      "role": "function",
+                      "content": "function_response",
+                      "name": "awesomeFunction",
+                      "args": { "name": "arg_name", "value": "arg_value" },
+                      "editable": true
+                    }
+                  ],
+                  "renderItem": {
+                    "type": "CustomView",
+                    "name": "messageItemView",
+                    "properties": {
+                      "viewName": "MessageItemView"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "Search",
+                "name": "messageInput",
+                "properties": {
+                  "placeholder": "Send message to chatbot",
+                  "onSearch": "onSendMessage"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Footer",
+        "name": "chatbotFooter",
+        "properties": {
+          "text": "© 2023 Chatbot Application"
+        }
+      }
+    ],
+    "functions": {
+      "onSendMessage": {
+        "description": "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response."
+      },
+      "onInitMessageListItem": {
+        "description": "The onInitMessageListItem function dynamically initializes each messageListItem component in the chat interface. It takes data from the dataItem of the message list's dataSource, setting properties like avatar and message content. This function is essential for rendering the chat flow, as it adapts the display of messages based on their type and sender, ensuring a responsive and user-friendly chat experience."
+      }
+    },
+    "customViews": {
+      "MessageItemView": {
+        "type": "List.Item",
+        "name": "messageListItem",
+        "properties": {
+          "dataIndex": -1,
+          "dataItem": {}
+        },
+        "onInit": "onInitMessageListItem",
+        "children": [
+          {
+            "type": "List.Item.Meta",
+            "name": "listItemMeta",
+            "properties": {
+              "avatar": {
+                "type": "Avatar",
+                "name": "listItemAvatar",
+                "properties": {
+                  "srcs": {
+                    "function": "https://xsgames.co/randomusers/assets/avatars/pixel/42.jpg",
+                    "user": "https://xsgames.co/randomusers/assets/avatars/pixel/45.jpg",
+                    "assistant": "https://xsgames.co/randomusers/assets/avatars/pixel/41.jpg",
+                    "system": "https://xsgames.co/randomusers/assets/avatars/pixel/21.jpg"
+                  }
+                }
+              },
+              "title": {
+                "type": "Text",
+                "name": "listItemTitle",
+                "properties": {
+                  "content": "{{item.role}}"
+                }
+              }
+            }
+          },
+          {
+            "type": "ReactJson",
+            "name": "messageArgs",
+            "properties": {
+              "src": {},
+              "theme": "rjv-default",
+              "collapsed": false,
+              "enableClipboard": true,
+              "displayObjectSize": true,
+              "displayDataTypes": false,
+              "indentWidth": 4
+            }
+          },
+          {
+            "type": "Text",
+            "name": "messageContent"
+          }
+        ]
+      }
+    }
+  }
+}

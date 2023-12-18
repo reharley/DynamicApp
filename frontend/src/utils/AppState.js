@@ -7,82 +7,129 @@ export class AppState {
   }
   constructor(app, setAppState, location) {
     this.setState(app, setAppState, location);
-    this.componentInstances = {};
-  }
-  setComponentInstance(componentName, componentInstance) {
-    this.componentInstances[componentName] = componentInstance;
+    this.customViewCache = {}; // New cache to store custom view instances
   }
 
-  getComponentInstance(componentName) {
-    return this.componentInstances?.[componentName];
-  }
+  getComponent(name) {
+    // First, search in the main app structure
+    let foundComponent = this._searchComponentByName(name, this.app);
 
-  changeComponent(componentName, newProperties) {
-    this.setAppState((prevApp) => {
-      const updatedApp = { ...prevApp };
-      this._updateComponent(updatedApp, componentName, newProperties);
-      this._updateCustomViewComponent(
-        updatedApp.customViews,
-        componentName,
-        newProperties
-      );
-      return updatedApp;
-    });
-  }
-
-  _updateComponent(obj, componentName, newProperties) {
-    if (obj.name === componentName) {
-      obj.properties = { ...obj.properties, ...newProperties };
-      return true;
-    }
-
-    if (obj.children) {
-      obj.children.forEach((child) => {
-        this._updateComponent(child, componentName, newProperties);
+    // If not found in the main app, search in the customViewCache
+    if (!foundComponent) {
+      Object.values(this.customViewCache).forEach((cacheItem) => {
+        const componentInCache = this._searchComponentByName(name, cacheItem);
+        if (componentInCache) {
+          foundComponent = componentInCache;
+          return;
+        }
       });
     }
-  }
 
-  _updateCustomViewComponent(customViews, componentName, newProperties) {
-    Object.values(customViews).forEach((view) => {
-      this._updateComponent(view, componentName, newProperties);
-    });
+    return foundComponent;
   }
+  _searchComponentByName(name, currentComponent) {
+    if (!currentComponent || typeof currentComponent !== "object") return null;
 
-  getComponent(componentName) {
-    let component = this._findComponent(this.app, componentName);
-    if (!component) {
-      // Search in custom views
-      const customViewComponent = this._findComponentInCustomViews(
-        this.app.customViews,
-        componentName
-      );
-      if (customViewComponent) {
-        component = customViewComponent;
+    // Base case: if the component's name matches, return the component
+    if (currentComponent.name === name) {
+      return currentComponent;
+    }
+
+    // Recursive case: iterate over all properties
+    for (const key in currentComponent) {
+      const prop = currentComponent[key];
+
+      // If the property is an object or an array, search recursively
+      if (prop && typeof prop === "object") {
+        let foundComponent;
+
+        if (Array.isArray(prop)) {
+          for (const item of prop) {
+            foundComponent = this._searchComponentByName(name, item);
+            if (foundComponent) return foundComponent;
+          }
+        } else {
+          foundComponent = this._searchComponentByName(name, prop);
+          if (foundComponent) return foundComponent;
+        }
       }
     }
-    component.componentInstance = this.getComponentInstance(componentName);
-    if (component.type === "Form" && component.componentInstance) {
-      component.formInstance = component.componentInstance;
-    }
-    return component;
-  }
-  _findComponentInCustomViews(customViews, name) {
-    for (const viewKey in customViews) {
-      const found = this._findComponent(customViews[viewKey], name);
-      if (found) return found;
-    }
+
     return null;
   }
-  _findComponent(obj, name) {
-    if (obj.name === name) return obj;
-    const children = obj.children || obj.items;
-    if (children) {
-      for (const child of children) {
-        const found = this._findComponent(child, name);
-        if (found) return found;
+  /**
+   * Updates a component's properties by name.
+   * @param {string} componentName - The name of the component to update.
+   * @param {object} newProperties - The new properties to set on the component.
+   */
+  changeComponent(componentName, newProperties) {
+    const component = this.getComponent(componentName);
+    if (component) {
+      // Update the component's properties
+      component.properties = { ...component.properties, ...newProperties };
+
+      // Optionally, you can trigger a state update or any other necessary updates
+      this.setAppState({ ...this.app }); // if setAppState is a method to trigger React state update
+
+      return true;
+    } else {
+      console.error(`Component "${componentName}" not found in AppState.`);
+      return false;
+    }
+  }
+
+  getCustomViewWithItemData(customViewName, dataItem, index) {
+    // Generate a unique cache key for the custom view instance
+    const cacheKey = `${customViewName}_${index}`;
+    // Check if the custom view instance is already in the cache
+    if (this.customViewCache[cacheKey]) {
+      return this.customViewCache[cacheKey];
+    }
+
+    const customViewTemplate = this.app.customViews[customViewName];
+    if (!customViewTemplate) {
+      console.error(`Custom view "${customViewName}" not found.`);
+      return null;
+    }
+
+    const customViewClone = structuredClone(customViewTemplate);
+
+    // Attach the dataItem and update names with index
+    customViewClone.properties = {
+      ...customViewClone.properties,
+      dataItem: dataItem,
+      dataIndex: index,
+    };
+
+    this._appendIndexToNames(customViewClone, index);
+
+    // Store the new custom view instance in the cache
+    this.customViewCache[cacheKey] = customViewClone;
+
+    return customViewClone;
+  }
+
+  /**
+   * Appends an index to the names of all components.
+   * @param {object} component - The component or sub-component to process.
+   * @param {number|string} index - The index to append.
+   */
+  _appendIndexToNames(component, index) {
+    // Check if the component is valid and has 'name' and 'type' properties
+    if (component && typeof component === "object") {
+      if (component.name && component.type) component.name += `_${index}`;
+
+      // Iterate over all properties for nested objects or arrays
+      for (const key in component) {
+        const prop = component[key];
+        if (prop && typeof prop === "object") {
+          if (Array.isArray(prop)) {
+            prop.forEach((item) => this._appendIndexToNames(item, index));
+          } else {
+            this._appendIndexToNames(prop, index);
+          }
+        }
       }
     }
-    return null;
   }
 }

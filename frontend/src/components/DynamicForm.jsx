@@ -3,7 +3,6 @@ import React from "react";
 import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";
 
-const { Option } = Select;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
@@ -36,6 +35,8 @@ const DynamicForm = ({ component, appState }) => {
           return <TextArea {...item.properties} />;
         case "InputNumber":
           return <InputNumber {...item.properties} />;
+        case "Button":
+          return <Button {...item.properties}>{item.properties.text}</Button>;
         default:
           return null;
       }
@@ -77,11 +78,6 @@ const DynamicForm = ({ component, appState }) => {
       }}
     >
       {component.items.map(renderFormItem)}
-      <Form.Item>
-        <Button {...component.properties.submitButton?.properties}>
-          {component.properties.submitButton?.properties?.text}
-        </Button>
-      </Form.Item>
     </Form>
   );
 };

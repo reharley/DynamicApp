@@ -1,11 +1,16 @@
 // components/DynamicApp.js
 import React, { useState, useRef } from "react";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
+import ReactJson from "react-json-view";
 import {
+  Avatar,
   Layout,
   Input,
+  Tag,
+  List,
   Tabs,
   Menu,
+  Typography,
   Breadcrumb,
   Row,
   Col,
@@ -15,28 +20,22 @@ import {
 } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../data/project_manager.json";
+import appJSON from "../apps/chatbot.json";
 import { AppState } from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 
 const { Header, Content, Footer } = Layout;
-
+const { Text } = Typography;
 let appState = null;
 
 const RenderComponent = ({ component }) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
-
-  const currentComponentInstance = appState.getComponentInstance(
-    component.name
-  );
-  if (currentComponentInstance !== componentRef) {
-    appState.setComponentInstance(component.name, componentRef);
-    if (currentComponentInstance === undefined && component.onInit) {
-      if (appFunctions[component.onInit] === undefined)
-        console.log(`Function ${component.onInit} not found`);
-      else appFunctions[component.onInit](appState, component);
-    }
+  component.current = componentRef;
+  if (componentRef.current === null && component.onInit) {
+    if (appFunctions[component.onInit] === undefined)
+      console.log(`Function ${component.onInit} not found`);
+    else appFunctions[component.onInit](appState, component);
   }
   const { type, children } = component;
   let properties = component.properties ?? {};
@@ -73,6 +72,9 @@ const RenderComponent = ({ component }) => {
           }))}
         />
       );
+    case "Avatar":
+      return <Avatar {...component.properties} />;
+
     case "Card":
       return <Card {...commonProps} />;
     case "Form":
@@ -133,6 +135,68 @@ const RenderComponent = ({ component }) => {
         />
       );
 
+    case "Text":
+      return <Text {...properties}>{properties.text}</Text>;
+    case "string":
+      return component.properties.text;
+
+    case "List":
+      return (
+        <List
+          {...properties}
+          renderItem={(item, index) => {
+            // Retrieve and interpolate CustomView using its name
+            const customViewClone = appState.getCustomViewWithItemData(
+              component.properties.renderItem.properties.viewName,
+              item,
+              index
+            );
+
+            return (
+              <List.Item>
+                {customViewClone && (
+                  <RenderComponent component={customViewClone} />
+                )}
+              </List.Item>
+            );
+          }}
+        />
+      );
+
+    case "List.Item":
+      return (
+        <List.Item {...commonProps}>
+          {children.map((child) => (
+            <RenderComponent key={child.name} component={child} />
+          ))}
+        </List.Item>
+      );
+
+    case "List.Item.Meta":
+      console.log("List.Item.Meta", commonProps);
+      return (
+        <List.Item.Meta
+          avatar={
+            properties.avatar && (
+              <RenderComponent component={properties.avatar} />
+            )
+          }
+          title={
+            properties.title && <RenderComponent component={properties.title} />
+          }
+          description={
+            properties.description && (
+              <RenderComponent component={properties.description} />
+            )
+          }
+        />
+      );
+
+    case "ReactJson":
+      return <ReactJson {...properties} />;
+
+    case "Tag":
+      return <Tag {...properties}>{children}</Tag>;
     case "Tabs":
       return (
         <Tabs
