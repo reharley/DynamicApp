@@ -233,7 +233,7 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
           items={
             component.items &&
             component.items.map((item) => ({
-              ...item,
+              ...item.properties,
               children: (
                 <>
                   {item.children &&

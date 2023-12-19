@@ -1,10 +1,6 @@
-update sendMessage description in chatbot.ts so that the user message gets updated to the messageList before sending the request so the user can see that the request is sent.
+Create a plugin for the webService endpoint that can work with system files.
 
-Also update the description to account for error handling.
-
-Also update the description so that the search button (antd Input.Search) shoes an indicator the request is in progress.
-
-do not generate code yet.
+One of the functions should be an object that returns the folder structure in an object.
 
 ```typescript
 // utils/AppState.ts

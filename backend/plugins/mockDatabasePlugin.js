@@ -11,23 +11,19 @@ class MockDatabasePlugin {
     return JSON.parse(jsonData);
   }
 
-  writeData(data) {
+  writeData({ data }) {
     fs.writeFileSync(this.dataPath, JSON.stringify(data, null, 4));
   }
 
-  getAllObjects(req, res) {
-    const type = req.body.params.type;
+  getAllObjects({ type }) {
     console.log("getAllObjects", type);
 
     let data = this.readData();
     if (type) data = data[type] ?? [];
-    res.json(data);
+    return data;
   }
 
-  createObject(req, res) {
-    const type = req.params.type;
-    const newObject = req.body; // Assuming the new object data is sent in the request body
-
+  createObject({ type, newObject }) {
     // Read existing data
     const data = this.readData();
     if (!data[type]) data[type] = [];
@@ -45,18 +41,16 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the new object
-    res.json(newObject);
+    return newObject;
   }
 
-  updateObject(req, res) {
-    const type = req.params.type;
-    const objectId = parseInt(req.params.id);
-    const updatedObject = req.body; // Assuming the updated object data is sent in the request body
+  updateObject({ type, id, updatedObject }) {
+    const objectId = parseInt(id);
 
     // Read existing data
     let data = this.readData();
     if (!data[type]) {
-      return res.status(404).json({ message: "Type not found" });
+      throw new Error("Type not found", { status: 404 });
     }
 
     // Find the object
@@ -64,7 +58,7 @@ class MockDatabasePlugin {
       (object) => object.id === objectId
     );
     if (objectIndex === -1) {
-      return res.status(404).json({ message: "Object not found" });
+      throw new Error("Object not found", { status: 404 });
     }
 
     // Update the object
@@ -74,17 +68,16 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the updated object
-    res.json(data[type][objectIndex]);
+    return data[type][objectIndex];
   }
 
-  deleteObject(req, res) {
-    const type = req.params.type;
-    const objectId = parseInt(req.params.id);
+  deleteObject({ type, id }) {
+    const objectId = parseInt(id);
 
     // Read existing data
     let data = this.readData();
     if (!data[type]) {
-      return res.status(404).json({ message: "Type not found" });
+      throw new Error("Type not found", { status: 404 });
     }
 
     // Find the object
@@ -92,7 +85,7 @@ class MockDatabasePlugin {
       (object) => object.id === objectId
     );
     if (objectIndex === -1) {
-      return res.status(404).json({ message: "Object not found" });
+      throw new Error("Object not found", { status: 404 });
     }
 
     // Remove the object
@@ -102,7 +95,7 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the deleted object
-    res.json(deletedObject);
+    return deletedObject;
   }
 }
 

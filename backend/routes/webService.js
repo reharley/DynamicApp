@@ -6,17 +6,19 @@ const router = express.Router();
 const MockDatabasePlugin = require("../plugins/mockDatabasePlugin");
 const SQLDatabasePlugin = require("../plugins/sqlDatabasePlugin");
 const OpenAIPlugin = require("../plugins/openAiPlugin");
+const FileSystemPlugin = require("../plugins/fsPlugin");
 
 // Initialize plugins
 const plugins = {
   mock: new MockDatabasePlugin(),
   sql: new SQLDatabasePlugin(),
   openai: new OpenAIPlugin(),
+  fs: new FileSystemPlugin("../"),
 };
 
 // Single /webService endpoint
 router.post("/webService", (req, res) => {
-  const { pluginType, action } = req.body;
+  const { pluginType, action, params } = req.body;
   console.log("pluginType", pluginType, "action", action);
   // Select the appropriate plugin
   const plugin = plugins[pluginType];
@@ -28,12 +30,12 @@ router.post("/webService", (req, res) => {
   try {
     if (typeof plugin[action] === "function") {
       // Call the action method with request and response webService
-      plugin[action](req, res);
+      res.json(plugin[action](params));
     } else {
       res.status(400).json({ message: "Invalid action" });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.status ?? 500).json({ message: error.message });
   }
 });
 
