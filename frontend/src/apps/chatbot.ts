@@ -155,7 +155,6 @@ const chatbotApp: App = {
             style: {
               whiteSpace: "pre-wrap", // Wraps the text
               wordWrap: "break-word", // This ensures that the text breaks to prevent overflow
-              maxWidth: "100%", // This limits the width to the parent container
             },
           },
         },

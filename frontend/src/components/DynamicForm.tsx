@@ -44,7 +44,7 @@ const DynamicForm = ({ component, appState }: DynamicFormProps) => {
     })();
 
     return (
-      <Form.Item {...item} key={item.name}>
+      <Form.Item {...item.formItemProps} key={item.name}>
         {formInput}
       </Form.Item>
     );

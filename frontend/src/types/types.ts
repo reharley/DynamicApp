@@ -53,6 +53,7 @@ export interface Component {
   onChange?: string;
   items?: Component[];
   children?: Component[];
+  formItemProps?: any;
 }
 
 export interface FunctionDescription {
