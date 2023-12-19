@@ -1,3 +1,37 @@
+Build unit tests in appFunction.test.js for appFunctions.js given the function description and the use case in the app.json.
+
+```javascript
+// appFunctions.js
+
+/**
+ * Initializes the main menu by setting the selected key based on the current route.
+ * @param {AppState} appState - The state of the application.
+ * @param {Component} component - The component that triggered the event.
+ */
+export function initMainMenu(appState, component) {
+  // Retrieve the mainMenu component from the app state
+  const mainMenu = appState.getComponent(component.name);
+  // Check if the mainMenu component is found
+  if (!mainMenu) {
+    console.error("MainMenu component not found.");
+    return;
+  }
+
+  // Get the current location's pathname
+  const currentPath = appState.location.pathname;
+  // Derive the selected key based on the current route
+  const selectedKey = mainMenu.items.find(
+    (item) => item.properties.link === currentPath
+  )?.properties.key;
+
+  // If a selected key is found, update the mainMenu component
+  if (selectedKey) {
+    appState.changeComponent(component.name, { selectedKeys: [selectedKey] });
+  }
+}
+```
+
+```javascript
 // utils/AppState.js
 export class AppState {
   setState(app, setAppState, location) {
@@ -86,3 +120,48 @@ export class AppState {
     return null;
   }
 }
+```
+
+sample component:
+
+```json
+{
+  "type": "Menu",
+  "name": "mainMenu",
+  "properties": {
+    "theme": "dark",
+    "mode": "horizontal",
+    "defaultSelectedKeys": ["Browse"]
+  },
+  "onInit": "initMainMenu",
+  "items": [
+    {
+      "type": "MenuItem",
+      "name": "browseBooks",
+      "properties": {
+        "key": "Browse",
+        "link": "/browse"
+      },
+      "text": "Browse Books"
+    },
+    {
+      "type": "MenuItem",
+      "name": "userProfile",
+      "properties": {
+        "key": "Profile",
+        "link": "/profile"
+      },
+      "text": "My Profile"
+    },
+    {
+      "type": "MenuItem",
+      "name": "adminPanel",
+      "properties": {
+        "key": "Admin",
+        "link": "/admin"
+      },
+      "text": "Admin Panel"
+    }
+  ]
+}
+```

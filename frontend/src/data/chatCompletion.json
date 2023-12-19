@@ -1,0 +1,48 @@
+[
+  {
+    "choices": [
+      {
+        "finish_reason": "function_call",
+        "index": 0,
+        "message": {
+          "content": null,
+          "function_call": {
+            "arguments": "{\n  \"arrival_date\": \"2023-07-04\",\n  \"checkout_date\": \"2023-07-05\",\n  \"people\": 1\n}",
+            "name": "check_availability"
+          },
+          "role": "assistant"
+        }
+      }
+    ],
+    "created": 1687995235,
+    "id": "chatcmpl-7WYxXqjy8wStUEWDaOPU6gPpWLsXa",
+    "model": "gpt-3.5-turbo-0613",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 42,
+      "prompt_tokens": 203,
+      "total_tokens": 245
+    }
+  },
+  {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "message": {
+          "content": "Based on the provided enquiry, it seems that the customer is inquiring about a lost item (bag) that was left in a specific room (213) last week. This enquiry does not require checking room availability or sending a receipt. Therefore, none of the provided functions should be used to service this enquiry.",
+          "role": "assistant"
+        }
+      }
+    ],
+    "created": 1687995457,
+    "id": "chatcmpl-7WZ17psd7UXA7OP2Xm87CMAVJh53",
+    "model": "gpt-3.5-turbo-0613",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 63,
+      "prompt_tokens": 211,
+      "total_tokens": 274
+    }
+  }
+]

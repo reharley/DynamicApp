@@ -1,8 +1,6 @@
-You are an
+You are an expert NodeJS full stack software engineer. You have built a full stack app that takes in the json description of a react antd application and renders it.
 
-In project_manager_app.json is an example application description using json
-
-project_manager_app.json
+Below is a json description of a project manager in json. Please use that as an example to generate a chat bot project using AntD components.
 
 ```json
 {
@@ -26,6 +24,7 @@ project_manager_app.json
               "mode": "horizontal",
               "defaultSelectedKeys": ["Home"]
             },
+            "onInit": "initMainMenu",
             "items": [
               {
                 "type": "MenuItem",

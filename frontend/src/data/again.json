@@ -1,0 +1,20 @@
+[
+  {
+    "role": "system",
+    "content": "You are ..."
+  },
+  {
+    "role": "user",
+    "content": "Kris: Okay "
+  },
+  {
+    "role": "assistant",
+    "content": "Go"
+  },
+  {
+    "role": "function",
+    "name": "function_name",
+    "args": "{\"name\":\"arg_name\",\"value\":\"arg_value\"}",
+    "content": "function_response"
+  }
+]
