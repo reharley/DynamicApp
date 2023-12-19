@@ -12,6 +12,9 @@ export default class AppState {
   getCustomView(name: string) {
     return this.app.customViews[name];
   }
+  getApp() {
+    return this.app;
+  }
   setState(app: App, setAppState: (app: App) => void, location: Location) {
     this.app = app;
     this.location = location;

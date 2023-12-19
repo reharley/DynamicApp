@@ -1,6 +1,6 @@
 // components/DynamicApp.tsx
-import React, { useState, useRef } from "react";
-import { Link, Routes, Route, useLocation } from "react-router-dom";
+import React, { useRef } from "react";
+import { Link, Routes, Route } from "react-router-dom";
 import ReactJson from "react-json-view";
 import {
   Avatar,
@@ -19,20 +19,18 @@ import {
 } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../apps/chatbot";
 import AppState from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
-import { App, Component } from "../types/types";
+import { Component } from "../types/types";
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
-let _app: App = appJSON;
-let appState: AppState;
 
 interface RenderComponentProps {
   component: Component;
+  appState: AppState;
 }
-const RenderComponent = ({ component }: RenderComponentProps) => {
+const RenderComponent = ({ component, appState }: RenderComponentProps) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
   component.current = componentRef.current;
@@ -51,7 +49,11 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
     children:
       children &&
       children.map((child) => (
-        <RenderComponent key={child.name} component={child} />
+        <RenderComponent
+          key={child.name}
+          component={child}
+          appState={appState}
+        />
       )),
   };
 
@@ -124,7 +126,10 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
                 key={child.name}
                 path={child.properties.path}
                 element={
-                  <RenderComponent component={child.properties.element} />
+                  <RenderComponent
+                    component={child.properties.element}
+                    appState={appState}
+                  />
                 }
               />
             ))}
@@ -134,6 +139,7 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
       return (
         <RenderComponent
           component={appState.getCustomView(properties.viewName)}
+          appState={appState}
         />
       );
 
@@ -160,7 +166,10 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
             return (
               <List.Item>
                 {customViewClone && (
-                  <RenderComponent component={customViewClone} />
+                  <RenderComponent
+                    component={customViewClone}
+                    appState={appState}
+                  />
                 )}
               </List.Item>
             );
@@ -173,7 +182,11 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
         <List.Item {...commonProps}>
           {children &&
             children.map((child) => (
-              <RenderComponent key={child.name} component={child} />
+              <RenderComponent
+                key={child.name}
+                component={child}
+                appState={appState}
+              />
             ))}
         </List.Item>
       );
@@ -183,15 +196,26 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
         <List.Item.Meta
           avatar={
             properties.avatar && (
-              <RenderComponent component={properties.avatar} />
+              <RenderComponent
+                component={properties.avatar}
+                appState={appState}
+              />
             )
           }
           title={
-            properties.title && <RenderComponent component={properties.title} />
+            properties.title && (
+              <RenderComponent
+                component={properties.title}
+                appState={appState}
+              />
+            )
           }
           description={
             properties.description && (
-              <RenderComponent component={properties.description} />
+              <RenderComponent
+                component={properties.description}
+                appState={appState}
+              />
             )
           }
         />
@@ -216,7 +240,11 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
                     item.children.map((child) => {
                       console.log("child", child);
                       return (
-                        <RenderComponent key={child.name} component={child} />
+                        <RenderComponent
+                          key={child.name}
+                          component={child}
+                          appState={appState}
+                        />
                       );
                     })}
                 </>
@@ -251,13 +279,11 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
       return <React.Fragment />;
   }
 };
-
-const DynamicApp = () => {
-  const [app, setApp] = useState(_app);
-  const location = useLocation();
-  if (appState === undefined) appState = new AppState(app, setApp, location);
-  appState.setState(app, setApp, location);
-  return <RenderComponent component={app} />;
+interface DynamicAppProps {
+  appState: AppState;
+}
+const DynamicApp = ({ appState }: DynamicAppProps) => {
+  return <RenderComponent component={appState.getApp()} appState={appState} />;
 };
 
 export default DynamicApp;

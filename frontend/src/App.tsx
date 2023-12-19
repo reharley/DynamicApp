@@ -1,14 +1,17 @@
 // App.js
-import React from "react";
+import React, { useState } from "react";
 import DynamicApp from "./components/DynamicApp";
-import { BrowserRouter } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import chatbot from "./apps/chatbot";
+import AppState from "./utils/AppState";
 
+let appState: AppState;
 const App: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <DynamicApp />
-    </BrowserRouter>
-  );
+  const [app, setApp] = useState(chatbot);
+  const location = useLocation();
+  if (appState === undefined) appState = new AppState(app, setApp, location);
+  appState.setState(app, setApp, location);
+  return <DynamicApp appState={appState} />;
 };
 
 export default App;
