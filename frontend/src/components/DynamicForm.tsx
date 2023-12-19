@@ -3,7 +3,7 @@ import React from "react";
 import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";
 import { Component } from "../types/types";
-import { AppState } from "../utils/AppState";
+import AppState from "../utils/AppState";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;

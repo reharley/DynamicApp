@@ -20,7 +20,7 @@ import {
 
 import DynamicForm from "./DynamicForm";
 import appJSON from "../apps/chatbot";
-import { AppState } from "../utils/AppState";
+import AppState from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 import { App, Component } from "../types/types";
 
@@ -253,7 +253,7 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
 const DynamicApp = () => {
   const [app, setApp] = useState(_app);
   const location = useLocation();
-  if (appState === null) appState = new AppState(app, setApp, location);
+  if (appState === undefined) appState = new AppState(app, setApp, location);
   appState.setState(app, setApp, location);
   return <RenderComponent component={app} />;
 };

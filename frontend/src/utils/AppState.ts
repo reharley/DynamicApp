@@ -4,7 +4,7 @@ import { Location } from "react-router-dom";
 import { App, Component } from "../types/types";
 
 // Define types for your component and app state here
-export class AppState {
+export default class AppState {
   private app: any;
   private location: any;
   private setAppState: (app: App) => void;

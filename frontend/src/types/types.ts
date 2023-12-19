@@ -1,5 +1,5 @@
 import { FormInstance } from "rc-field-form";
-import { AppState } from "../utils/AppState";
+import AppState from "../utils/AppState";
 
 // types.ts
 import * as appFunctions from "../appFunctions";

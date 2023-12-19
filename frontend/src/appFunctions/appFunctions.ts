@@ -2,7 +2,7 @@
 import dayjs from "dayjs";
 
 import objectService from "../services/objectService";
-import { AppState } from "../utils/AppState";
+import AppState from "../utils/AppState";
 import {
   Component,
   onFormChange,
@@ -13,7 +13,7 @@ import {
 } from "../types/types";
 import { FormInstance } from "rc-field-form";
 
-const updateEndDateRestriction: onFormFinish = (
+export const updateEndDateRestriction: onFormFinish = (
   form: FormInstance,
   appState: AppState,
   component: Component
@@ -47,7 +47,7 @@ const updateEndDateRestriction: onFormFinish = (
   appState.changeComponent("endDate", { disableEndDate });
 };
 
-const submitObject: onFormFinish = async (
+export const submitObject: onFormFinish = async (
   values: any,
   appState: AppState,
   component: Component
@@ -73,7 +73,7 @@ const submitObject: onFormFinish = async (
   }
 };
 
-const loadObjectData: onInit = async (
+export const loadObjectData: onInit = async (
   appState: AppState,
   component: Component
 ) => {
@@ -87,7 +87,7 @@ const loadObjectData: onInit = async (
   }
 };
 
-function initializeDateValuesForForm(form: Component, record: any) {
+export function initializeDateValuesForForm(form: Component, record: any) {
   const newRecord = { ...record };
   const formItems = form.items;
 
@@ -105,7 +105,7 @@ function initializeDateValuesForForm(form: Component, record: any) {
   return newRecord;
 }
 
-const populateObjectFormOnSelection: onRowClick = (
+export const populateObjectFormOnSelection: onRowClick = (
   record: any,
   rowIndex: number,
   appState: AppState,
@@ -126,7 +126,7 @@ const populateObjectFormOnSelection: onRowClick = (
 /**
  * Initializes a message list item with data from the message list's dataSource.
  */
-const onInitMessageListItem: onInit = (
+export const onInitMessageListItem: onInit = (
   appState: AppState,
   component: Component
 ) => {
