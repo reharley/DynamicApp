@@ -152,19 +152,19 @@ const chatbotApp: App = {
             },
           },
         },
-        // {
-        //   type: "ReactJson",
-        //   name: "messageArgs",
-        //   properties: {
-        //     src: {},
-        //     theme: "rjv-default",
-        //     collapsed: false,
-        //     enableClipboard: true,
-        //     displayObjectSize: true,
-        //     displayDataTypes: false,
-        //     indentWidth: 4,
-        //   },
-        // },
+        {
+          type: "ReactJson",
+          name: "messageArgs",
+          properties: {
+            src: {},
+            theme: "rjv-default",
+            collapsed: false,
+            enableClipboard: true,
+            displayObjectSize: true,
+            displayDataTypes: false,
+            indentWidth: 4,
+          },
+        },
         {
           type: "Text",
           name: "messageContent",

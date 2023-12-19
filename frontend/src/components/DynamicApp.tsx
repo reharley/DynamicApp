@@ -195,8 +195,8 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
         />
       );
 
-    // case "ReactJson":
-    //   // return <ReactJson {...properties} />;
+    case "ReactJson":
+      return <ReactJson {...properties} />;
 
     case "Tag":
       return <Tag {...properties}>{children}</Tag>;
