@@ -1,16 +1,28 @@
 // utils/AppState.js
+
+import { Location } from "react-router-dom";
+import { App, Component } from "../types/types";
+
+// Define types for your component and app state here
 export class AppState {
-  setState(app, setAppState, location) {
+  private app: any;
+  private location: any;
+  private setAppState: (app: App) => void;
+  private customViewCache: { [key: string]: any };
+  getCustomView(name: string) {
+    return this.app.customViews[name];
+  }
+  setState(app: App, setAppState: (app: App) => void, location: Location) {
     this.app = app;
     this.location = location;
     this.setAppState = setAppState;
   }
-  constructor(app, setAppState, location) {
+  constructor(app: App, setAppState: (app: App) => void, location: Location) {
     this.setState(app, setAppState, location);
     this.customViewCache = {}; // New cache to store custom view instances
   }
 
-  getComponent(name) {
+  getComponent(name: string) {
     // First, search in the main app structure
     let foundComponent = this._searchComponentByName(name, this.app);
 
@@ -27,7 +39,10 @@ export class AppState {
 
     return foundComponent;
   }
-  _searchComponentByName(name, currentComponent) {
+  _searchComponentByName(
+    name: string,
+    currentComponent: any
+  ): Component | null {
     if (!currentComponent || typeof currentComponent !== "object") return null;
 
     // Base case: if the component's name matches, return the component
@@ -62,7 +77,7 @@ export class AppState {
    * @param {string} componentName - The name of the component to update.
    * @param {object} newProperties - The new properties to set on the component.
    */
-  changeComponent(componentName, newProperties) {
+  changeComponent(componentName: string, newProperties: any) {
     const component = this.getComponent(componentName);
     if (component) {
       // Update the component's properties
@@ -78,7 +93,11 @@ export class AppState {
     }
   }
 
-  getCustomViewWithItemData(customViewName, dataItem, index) {
+  getCustomViewWithItemData(
+    customViewName: string,
+    dataItem: any,
+    index: number
+  ) {
     // Generate a unique cache key for the custom view instance
     const cacheKey = `${customViewName}_${index}`;
     // Check if the custom view instance is already in the cache
@@ -114,7 +133,7 @@ export class AppState {
    * @param {object} component - The component or sub-component to process.
    * @param {number|string} index - The index to append.
    */
-  _appendIndexToNames(component, index) {
+  _appendIndexToNames(component: any, index: number) {
     // Check if the component is valid and has 'name' and 'type' properties
     if (component && typeof component === "object") {
       if (component.name && component.type) component.name += `_${index}`;

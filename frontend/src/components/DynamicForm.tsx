@@ -2,24 +2,25 @@
 import React from "react";
 import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";
+import { Component } from "../types/types";
+import { AppState } from "../utils/AppState";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
-const DynamicForm = ({ component, appState }) => {
+type DynamicFormProps = {
+  component: Component;
+  appState: AppState;
+};
+const DynamicForm = ({ component, appState }: DynamicFormProps) => {
   const [form] = Form.useForm();
-  const currentComponentInstance = appState.getComponentInstance(
-    component.name
-  );
-  if (currentComponentInstance !== form) {
-    appState.setComponentInstance(component.name, form);
-    if (currentComponentInstance === undefined && component.onInit)
-      if (appFunctions[component.onInit] === undefined)
-        console.log(`Function ${component.onInit} not found`);
-      else appFunctions[component.onInit](appState);
-  }
+  component.current = form;
+  if (component.current === null && component.onInit)
+    if (appFunctions.initFunctions[component.onInit] === undefined)
+      console.log(`Function ${component.onInit} not found`);
+    else appFunctions.initFunctions[component.onInit](appState, component);
 
-  const renderFormItem = (item) => {
+  const renderFormItem = (item: Component) => {
     // Switch statement to render form input based on type
     const formInput = (() => {
       switch (item.type) {
@@ -43,7 +44,7 @@ const DynamicForm = ({ component, appState }) => {
     })();
 
     return (
-      <Form.Item {...item} key={item.name} onChange={undefined}>
+      <Form.Item {...item} key={item.name}>
         {formInput}
       </Form.Item>
     );
@@ -54,10 +55,15 @@ const DynamicForm = ({ component, appState }) => {
       form={form}
       layout={component.properties.layout}
       onFinish={(values) =>
-        appFunctions[component.properties.onSubmit](values, appState, component)
+        appFunctions.formFinishFunctions[component.properties.onSubmit](
+          values,
+          appState,
+          component
+        )
       }
       onFieldsChange={(changedFields, allFields) => {
         changedFields.forEach((field) => {
+          if (component.items === undefined) return;
           const fieldName = field.name[field.name.length - 1];
           // Check if the changed field has a linked function and execute it
           const fieldComponent = component.items.find(
@@ -66,18 +72,18 @@ const DynamicForm = ({ component, appState }) => {
           if (
             fieldComponent &&
             fieldComponent.onChange &&
-            appFunctions[fieldComponent.onChange]
+            appFunctions.formChangeFunctions[fieldComponent.onChange]
           ) {
-            appFunctions[fieldComponent.onChange](
+            appFunctions.formChangeFunctions[fieldComponent.onChange](
               form,
-              fieldComponent,
-              appState
+              appState,
+              fieldComponent
             );
           }
         });
       }}
     >
-      {component.items.map(renderFormItem)}
+      {component.items && component.items.map(renderFormItem)}
     </Form>
   );
 };

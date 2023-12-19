@@ -11,7 +11,6 @@ import {
   Tabs,
   Menu,
   Typography,
-  Breadcrumb,
   Row,
   Col,
   Card,
@@ -20,22 +19,27 @@ import {
 } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../apps/chatbot.json";
+import appJSON from "../apps/chatbot";
 import { AppState } from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
+import { App, Component } from "../types/types";
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
-let appState = null;
+let _app: App = appJSON;
+let appState: AppState;
 
-const RenderComponent = ({ component }) => {
+interface RenderComponentProps {
+  component: Component;
+}
+const RenderComponent = ({ component }: RenderComponentProps) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
-  component.current = componentRef;
+  component.current = componentRef.current;
   if (componentRef.current === null && component.onInit) {
-    if (appFunctions[component.onInit] === undefined)
+    if (appFunctions.initFunctions[component.onInit] === undefined)
       console.log(`Function ${component.onInit} not found`);
-    else appFunctions[component.onInit](appState, component);
+    else appFunctions.initFunctions[component.onInit](appState, component);
   }
   const { type, children } = component;
   let properties = component.properties ?? {};
@@ -66,10 +70,15 @@ const RenderComponent = ({ component }) => {
       return (
         <Menu
           {...properties}
-          items={component.items.map((item) => ({
-            key: item.properties.key,
-            label: <Link to={item.properties.link}>{item.text}</Link>,
-          }))}
+          items={
+            component.items &&
+            component.items.map((item) => ({
+              key: item.properties.key,
+              label: (
+                <Link to={item.properties.link}>{item.properties.text}</Link>
+              ),
+            }))
+          }
         />
       );
     case "Avatar":
@@ -80,7 +89,7 @@ const RenderComponent = ({ component }) => {
     case "Form":
       return <DynamicForm {...commonProps} appState={appState} />;
     case "Table":
-      const onRow = (record, rowIndex) => {
+      const onRow = (record: any, rowIndex: number) => {
         return {
           onClick: () => {
             if (
@@ -88,8 +97,8 @@ const RenderComponent = ({ component }) => {
               component.properties.onRow.click
             ) {
               const functionName = component.properties.onRow.click;
-              if (appFunctions[functionName]) {
-                appFunctions[functionName](
+              if (appFunctions.rowClickFunctions[functionName]) {
+                appFunctions.rowClickFunctions[functionName](
                   record,
                   rowIndex,
                   appState,
@@ -105,33 +114,26 @@ const RenderComponent = ({ component }) => {
       return <Footer {...commonProps} />;
     case "Modal":
       return <Modal {...commonProps} />;
-    case "Breadcrumb":
-      return (
-        <Breadcrumb {...commonProps}>
-          {properties.items.map((item) => (
-            <Breadcrumb.Item key={item.name} href={item.link}>
-              {item.name}
-            </Breadcrumb.Item>
-          ))}
-        </Breadcrumb>
-      );
 
     case "Routes":
       return (
         <Routes {...commonProps}>
-          {children.map((child) => (
-            <Route
-              key={child.name}
-              path={child.properties.path}
-              element={<RenderComponent component={child.properties.element} />}
-            />
-          ))}
+          {children &&
+            children.map((child) => (
+              <Route
+                key={child.name}
+                path={child.properties.path}
+                element={
+                  <RenderComponent component={child.properties.element} />
+                }
+              />
+            ))}
         </Routes>
       );
     case "CustomView":
       return (
         <RenderComponent
-          component={appState.app.customViews[properties.viewName]}
+          component={appState.getCustomView(properties.viewName)}
         />
       );
 
@@ -166,9 +168,10 @@ const RenderComponent = ({ component }) => {
     case "List.Item":
       return (
         <List.Item {...commonProps}>
-          {children.map((child) => (
-            <RenderComponent key={child.name} component={child} />
-          ))}
+          {children &&
+            children.map((child) => (
+              <RenderComponent key={child.name} component={child} />
+            ))}
         </List.Item>
       );
 
@@ -192,8 +195,8 @@ const RenderComponent = ({ component }) => {
         />
       );
 
-    case "ReactJson":
-      return <ReactJson {...properties} />;
+    // case "ReactJson":
+    //   // return <ReactJson {...properties} />;
 
     case "Tag":
       return <Tag {...properties}>{children}</Tag>;
@@ -201,17 +204,23 @@ const RenderComponent = ({ component }) => {
       return (
         <Tabs
           {...commonProps}
-          items={component.items.map((item) => ({
-            ...item,
-            children: (
-              <>
-                {item.children.map((child) => {
-                  console.log("child", child);
-                  return <RenderComponent key={child.name} component={child} />;
-                })}
-              </>
-            ),
-          }))}
+          items={
+            component.items &&
+            component.items.map((item) => ({
+              ...item,
+              children: (
+                <>
+                  {item.children &&
+                    item.children.map((child) => {
+                      console.log("child", child);
+                      return (
+                        <RenderComponent key={child.name} component={child} />
+                      );
+                    })}
+                </>
+              ),
+            }))
+          }
         />
       );
     case "Search":
@@ -219,8 +228,15 @@ const RenderComponent = ({ component }) => {
         <Input.Search
           {...commonProps}
           onSearch={(value) => {
-            if (component.onSearch && appFunctions[component.onSearch]) {
-              appFunctions[component.onSearch](value, appState, component);
+            if (
+              component.onSearch &&
+              appFunctions.searchFunctions[component.onSearch]
+            ) {
+              appFunctions.searchFunctions[component.onSearch](
+                value,
+                appState,
+                component
+              );
             } else {
               console.log(
                 `Function ${component.onSearch} not found in appFunctions`
@@ -235,7 +251,7 @@ const RenderComponent = ({ component }) => {
 };
 
 const DynamicApp = () => {
-  const [app, setApp] = useState(appJSON?.app);
+  const [app, setApp] = useState(_app);
   const location = useLocation();
   if (appState === null) appState = new AppState(app, setApp, location);
   appState.setState(app, setApp, location);

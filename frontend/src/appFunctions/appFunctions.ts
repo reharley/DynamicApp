@@ -1,11 +1,23 @@
 // appFunctions.js
 import dayjs from "dayjs";
-import { v4 as uuidv4 } from "uuid";
 
-import * as appFunctions from "../appFunctions";
 import objectService from "../services/objectService";
+import { AppState } from "../utils/AppState";
+import {
+  Component,
+  onFormChange,
+  onFormFinish,
+  onInit,
+  onRowClick,
+  onSearch,
+} from "../types/types";
+import { FormInstance } from "rc-field-form";
 
-export function updateEndDateRestriction(form, component, appState) {
+const updateEndDateRestriction: onFormFinish = (
+  form: FormInstance,
+  appState: AppState,
+  component: Component
+) => {
   const startDate = form.getFieldValue("startDate");
   const endDate = form.getFieldValue("endDate");
 
@@ -20,7 +32,7 @@ export function updateEndDateRestriction(form, component, appState) {
   }
 
   // Disable dates before the start date for the end date
-  const disableEndDate = (current) => {
+  const disableEndDate = (current: dayjs.Dayjs) => {
     return current && current.isBefore(startDate, "day");
   };
 
@@ -28,13 +40,20 @@ export function updateEndDateRestriction(form, component, appState) {
   form.setFields([
     {
       name: "endDate",
-      disabledDate: disableEndDate,
     },
   ]);
-}
 
-export const submitObject = async (values, appState, component) => {
+  // Update the 'disabledDate' property for the 'endDate' field
+  appState.changeComponent("endDate", { disableEndDate });
+};
+
+const submitObject: onFormFinish = async (
+  values: any,
+  appState: AppState,
+  component: Component
+) => {
   try {
+    if (!component.objectType) return;
     // Check if formData has an id
     if (values.id) {
       // Update the existing project
@@ -45,7 +64,7 @@ export const submitObject = async (values, appState, component) => {
     }
 
     // Reload the project data to reflect changes
-    await appFunctions.loadObjectData(appState, component);
+    await loadObjectData(appState, component);
 
     // Handle UI changes, like showing a success notification
   } catch (error) {
@@ -54,8 +73,12 @@ export const submitObject = async (values, appState, component) => {
   }
 };
 
-export const loadObjectData = async (appState, component) => {
+const loadObjectData: onInit = async (
+  appState: AppState,
+  component: Component
+) => {
   try {
+    if (component.objectType === undefined) return;
     const objects = await objectService.getAllObjects(component.objectType);
     appState.changeComponent(component.name, { dataSource: objects });
   } catch (error) {
@@ -64,59 +87,49 @@ export const loadObjectData = async (appState, component) => {
   }
 };
 
-export function initializeDateValuesForForm(form, record) {
+function initializeDateValuesForForm(form: Component, record: any) {
   const newRecord = { ...record };
   const formItems = form.items;
 
-  formItems.forEach((item) => {
-    if (item.type === "DatePicker") {
-      const fieldName = item.name;
-      if (newRecord[fieldName]) {
-        newRecord[fieldName] = dayjs(newRecord[fieldName]);
+  if (formItems) {
+    formItems.forEach((item) => {
+      if (item.type === "DatePicker") {
+        const fieldName = item.name;
+        if (newRecord[fieldName]) {
+          newRecord[fieldName] = dayjs(newRecord[fieldName]);
+        }
       }
-    }
-  });
+    });
+  }
 
   return newRecord;
 }
 
-export const populateObjectFormOnSelection = (
-  record,
-  rowIndex,
-  appState,
-  component
+const populateObjectFormOnSelection: onRowClick = (
+  record: any,
+  rowIndex: number,
+  appState: AppState,
+  component: Component
 ) => {
   console.log("Row selected:", record, rowIndex, component);
+  if (component.objectFormName === undefined) return;
   const objectForm = appState.getComponent(component.objectFormName);
   console.log("objectForm", objectForm);
-  if (objectForm && objectForm.formInstance) {
+  if (objectForm && objectForm.current) {
     const formattedRecord = initializeDateValuesForForm(objectForm, record);
-    objectForm.formInstance.setFieldsValue(formattedRecord);
+    (objectForm.current as FormInstance).setFieldsValue(formattedRecord);
   } else {
     console.error("Object form or form instance not found");
   }
 };
 
-export function onInitProjectForm(appState, component) {
-  console.log("onInitProjectForm");
-  const projectForm = appState.getComponent("projectForm");
-
-  if (projectForm && projectForm.formInstance) {
-    const randomGuid = uuidv4();
-    projectForm.formInstance.setFieldsValue({
-      id: randomGuid,
-    });
-  } else {
-    console.error("Project form or form instance not found");
-  }
-}
-
 /**
  * Initializes a message list item with data from the message list's dataSource.
- * @param {AppState} appState - The state of the application.
- * @param {Component} component - The messageListItem component to initialize.
  */
-export function onInitMessageListItem(appState, component) {
+const onInitMessageListItem: onInit = (
+  appState: AppState,
+  component: Component
+) => {
   const dataItem = component.properties.dataItem;
   const dataIndex = component.properties.dataIndex;
 
@@ -126,7 +139,7 @@ export function onInitMessageListItem(appState, component) {
   }
 
   // Adjust component names based on dataIndex
-  const adjustedName = (baseName) => `${baseName}_${dataIndex}`;
+  const adjustedName = (baseName: string) => `${baseName}_${dataIndex}`;
 
   // Update Title component
   const listItemTitleName = adjustedName("listItemTitle");
@@ -160,4 +173,22 @@ export function onInitMessageListItem(appState, component) {
     const messageArgsName = adjustedName("messageArgs");
     appState.changeComponent(messageArgsName, { style: { display: "none" } });
   }
-}
+};
+
+export const formFinishFunctions: Record<string, onFormFinish> = {
+  submitObject,
+};
+export const formChangeFunctions: Record<string, onFormChange> = {
+  updateEndDateRestriction,
+};
+
+export const initFunctions: Record<string, onInit> = {
+  onInitMessageListItem,
+  loadObjectData,
+};
+
+export const rowClickFunctions: Record<string, onRowClick> = {
+  populateObjectFormOnSelection,
+};
+
+export const searchFunctions: Record<string, onSearch> = {};

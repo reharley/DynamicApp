@@ -26,36 +26,36 @@
                 "name": "menuItemHome",
                 "properties": {
                   "key": "Home",
-                  "link": "/"
-                },
-                "text": "Home"
+                  "link": "/",
+                  "text": "Home"
+                }
               },
               {
                 "type": "MenuItem",
                 "name": "menuItemProjects",
                 "properties": {
                   "key": "Projects",
-                  "link": "/projects"
-                },
-                "text": "Projects"
+                  "link": "/projects",
+                  "text": "Projects"
+                }
               },
               {
                 "type": "MenuItem",
                 "name": "menuItemTeams",
                 "properties": {
                   "key": "Teams",
-                  "link": "/teams"
-                },
-                "text": "Teams"
+                  "link": "/teams",
+                  "text": "Teams"
+                }
               },
               {
                 "type": "MenuItem",
                 "name": "menuItemReports",
                 "properties": {
                   "key": "Reports",
-                  "link": "/reports"
-                },
-                "text": "Reports"
+                  "link": "/reports",
+                  "text": "Reports"
+                }
               }
             ]
           }
@@ -657,16 +657,6 @@
       },
       "onInitProjectForm": {
         "description": "This function is triggered when the 'projectForm' component initializes. It generates a random Globally Unique Identifier (GUID) using the 'uuid' library and sets this GUID as the default value for the 'id' field in the form. This ensures that every new project entry starts with a unique identifier, enhancing data integrity and preventing conflicts. The function checks for the existence of the 'projectForm' and its form instance to ensure safe operation. In cases where the form or its instance is not found, an error is logged for debugging purposes. This automation streamlines the process of creating new project entries, allowing users to focus on inputting other essential project details."
-      }
-    },
-    "navigation": {
-      "type": "Breadcrumb",
-      "name": "mainBreadcrumb",
-      "properties": {
-        "items": [
-          { "name": "Home", "link": "/" },
-          { "name": "Projects", "link": "/projects" }
-        ]
       }
     }
   }

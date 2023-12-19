@@ -1,4 +1,56 @@
-onInitMessageListItem should set the role to listItemTitle, and hide messageArgs if not a function role.
+Complete the types file referencing the cases in DynamicApp
+
+```typescript
+// types.ts
+export interface Welcome {
+  app: App;
+}
+
+export interface App {
+  type: string;
+  name: string;
+  properties: any;
+  children: Component[];
+  customViews: Record<string, CustomViewComponent>;
+  functions: Record<string, FunctionDescription>;
+}
+interface CustomViewComponent extends Component {
+  type: "CustomView";
+  properties: {
+    viewName: string;
+  };
+}
+
+export interface Component {
+  type: string;
+  name: string;
+  properties?: any;
+  onInit?: string;
+  items?: Component[];
+  children?: Component[];
+}
+
+export interface FunctionDescription {
+  description: string;
+}
+```
+
+```javascript
+// App.js
+import React from "react";
+import DynamicApp from "./components/DynamicApp";
+import { BrowserRouter } from "react-router-dom";
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <DynamicApp />
+    </BrowserRouter>
+  );
+};
+
+export default App;
+```
 
 ```javascript
 // utils/AppState.js
@@ -172,7 +224,7 @@ let appState = null;
 const RenderComponent = ({ component }) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
-  component.current = componentRef.current;
+  component.current = componentRef;
   if (componentRef.current === null && component.onInit) {
     if (appFunctions[component.onInit] === undefined)
       console.log(`Function ${component.onInit} not found`);
@@ -278,6 +330,8 @@ const RenderComponent = ({ component }) => {
 
     case "Text":
       return <Text {...properties}>{properties.text}</Text>;
+    case "string":
+      return component.properties.text;
 
     case "List":
       return (
@@ -385,400 +439,254 @@ export default DynamicApp;
 ```
 
 ```javascript
-// services/objectService.js
-import axios from "axios";
+// appFunctions.js
+import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
 
-const baseUrl = "http://localhost:3001/api";
+import objectService from "../services/objectService";
 
-// Helper function to send requests to the /object endpoint
-const sendObjectRequest = async (pluginType, action, objectName, data = {}) => {
-  const response = await axios.post(`${baseUrl}/objects`, {
-    pluginType,
-    action,
-    params: { type: objectName },
-    body: data,
-  });
-  return response.data;
-};
+export function updateEndDateRestriction(form, component, appState) {
+  const startDate = form.getFieldValue("startDate");
+  const endDate = form.getFieldValue("endDate");
 
-// Fetches all instances of a specified object type from the server.
-const getAllObjects = async (objectName) => {
-  return sendObjectRequest("mock", "getAllObjects", objectName);
-};
-
-// Creates a new instance of a specified object type on the server.
-const createObject = async (objectName, newObject) => {
-  return sendObjectRequest("mock", "createObject", objectName, newObject);
-};
-
-// Updates an existing instance of a specified object type on the server.
-const updateObject = async (objectName, id, updatedObject) => {
-  return sendObjectRequest("mock", "updateObject", objectName, {
-    ...updatedObject,
-    id,
-  });
-};
-
-// Deletes an instance of a specified object type from the server.
-const deleteObject = async (objectName, id) => {
-  return sendObjectRequest("mock", "deleteObject", objectName, { id });
-};
-
-export default {
-  getAllObjects,
-  createObject,
-  updateObject,
-  deleteObject,
-};
-```
-
-```javascript
-// components/DynamicForm.jsx
-import React from "react";
-import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
-import * as appFunctions from "../appFunctions";
-
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
-
-const DynamicForm = ({ component, appState }) => {
-  const [form] = Form.useForm();
-  const currentComponentInstance = appState.getComponentInstance(
-    component.name
-  );
-  if (currentComponentInstance !== form) {
-    appState.setComponentInstance(component.name, form);
-    if (currentComponentInstance === undefined && component.onInit)
-      if (appFunctions[component.onInit] === undefined)
-        console.log(`Function ${component.onInit} not found`);
-      else appFunctions[component.onInit](appState);
+  // Clear the end date if it is before the start date
+  if (startDate && endDate && startDate.isAfter(endDate)) {
+    form.setFields([
+      {
+        name: "endDate",
+        value: null,
+      },
+    ]);
   }
 
-  const renderFormItem = (item) => {
-    // Switch statement to render form input based on type
-    const formInput = (() => {
-      switch (item.type) {
-        case "Input":
-          return <Input {...item.properties} />;
-        case "DatePicker":
-          return <DatePicker {...item.properties} />;
-        case "RangePicker":
-          return <RangePicker {...item.properties} />;
-        case "Select":
-          return <Select {...item.properties} />;
-        case "TextArea":
-          return <TextArea {...item.properties} />;
-        case "InputNumber":
-          return <InputNumber {...item.properties} />;
-        case "Button":
-          return <Button {...item.properties}>{item.properties.text}</Button>;
-        default:
-          return null;
-      }
-    })();
-
-    return (
-      <Form.Item {...item} key={item.name} onChange={undefined}>
-        {formInput}
-      </Form.Item>
-    );
+  // Disable dates before the start date for the end date
+  const disableEndDate = (current) => {
+    return current && current.isBefore(startDate, "day");
   };
 
-  return (
-    <Form
-      form={form}
-      layout={component.properties.layout}
-      onFinish={(values) =>
-        appFunctions[component.properties.onSubmit](values, appState, component)
-      }
-      onFieldsChange={(changedFields, allFields) => {
-        changedFields.forEach((field) => {
-          const fieldName = field.name[field.name.length - 1];
-          // Check if the changed field has a linked function and execute it
-          const fieldComponent = component.items.find(
-            (item) => item.name === fieldName
-          );
-          if (
-            fieldComponent &&
-            fieldComponent.onChange &&
-            appFunctions[fieldComponent.onChange]
-          ) {
-            appFunctions[fieldComponent.onChange](
-              form,
-              fieldComponent,
-              appState
-            );
-          }
-        });
-      }}
-    >
-      {component.items.map(renderFormItem)}
-    </Form>
-  );
-};
+  // Update the 'disabledDate' property for the 'endDate' field
+  form.setFields([
+    {
+      name: "endDate",
+      disabledDate: disableEndDate,
+    },
+  ]);
+}
 
-export default DynamicForm;
-```
+export const submitObject = async (values, appState, component) => {
+  try {
+    // Check if formData has an id
+    if (values.id) {
+      // Update the existing project
+      await objectService.updateObject(component.objectType, values.id, values);
+    } else {
+      // Create a new project
+      await objectService.createObject(component.objectType, values);
+    }
 
-```javascript
-// components/DynamicForm.jsx
-import React from "react";
-import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
-import * as appFunctions from "../appFunctions";
+    // Reload the project data to reflect changes
+    await loadObjectData(appState, component);
 
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
-
-const DynamicForm = ({ component, appState }) => {
-  const [form] = Form.useForm();
-  const currentComponentInstance = appState.getComponentInstance(
-    component.name
-  );
-  if (currentComponentInstance !== form) {
-    appState.setComponentInstance(component.name, form);
-    if (currentComponentInstance === undefined && component.onInit)
-      if (appFunctions[component.onInit] === undefined)
-        console.log(`Function ${component.onInit} not found`);
-      else appFunctions[component.onInit](appState);
+    // Handle UI changes, like showing a success notification
+  } catch (error) {
+    console.error(`Error submitting ${component.objectType}:`, error);
+    // Handle errors, for example, show an error notification
   }
-
-  const renderFormItem = (item) => {
-    // Switch statement to render form input based on type
-    const formInput = (() => {
-      switch (item.type) {
-        case "Input":
-          return <Input {...item.properties} />;
-        case "DatePicker":
-          return <DatePicker {...item.properties} />;
-        case "RangePicker":
-          return <RangePicker {...item.properties} />;
-        case "Select":
-          return <Select {...item.properties} />;
-        case "TextArea":
-          return <TextArea {...item.properties} />;
-        case "InputNumber":
-          return <InputNumber {...item.properties} />;
-        case "Button":
-          return <Button {...item.properties}>{item.properties.text}</Button>;
-        default:
-          return null;
-      }
-    })();
-
-    return (
-      <Form.Item {...item} key={item.name} onChange={undefined}>
-        {formInput}
-      </Form.Item>
-    );
-  };
-
-  return (
-    <Form
-      form={form}
-      layout={component.properties.layout}
-      onFinish={(values) =>
-        appFunctions[component.properties.onSubmit](values, appState, component)
-      }
-      onFieldsChange={(changedFields, allFields) => {
-        changedFields.forEach((field) => {
-          const fieldName = field.name[field.name.length - 1];
-          // Check if the changed field has a linked function and execute it
-          const fieldComponent = component.items.find(
-            (item) => item.name === fieldName
-          );
-          if (
-            fieldComponent &&
-            fieldComponent.onChange &&
-            appFunctions[fieldComponent.onChange]
-          ) {
-            appFunctions[fieldComponent.onChange](
-              form,
-              fieldComponent,
-              appState
-            );
-          }
-        });
-      }}
-    >
-      {component.items.map(renderFormItem)}
-    </Form>
-  );
 };
 
-export default DynamicForm;
-```
+export const loadObjectData = async (appState, component) => {
+  try {
+    const objects = await objectService.getAllObjects(component.objectType);
+    appState.changeComponent(component.name, { dataSource: objects });
+  } catch (error) {
+    console.error("Error loading project data:", error);
+    // Handle errors (e.g., show error message)
+  }
+};
 
-app json:
+export function initializeDateValuesForForm(form, record) {
+  const newRecord = { ...record };
+  const formItems = form.items;
 
-```json
-{
-  "app": {
-    "type": "Layout",
-    "name": "chatbotLayout",
-    "properties": {
-      "style": { "layout": "vertical" }
-    },
-    "children": [
-      {
-        "type": "Header",
-        "name": "chatbotHeader",
-        "properties": {},
-        "children": [
-          {
-            "type": "Menu",
-            "name": "chatbotMenu",
-            "properties": {
-              "theme": "dark",
-              "mode": "horizontal",
-              "defaultSelectedKeys": ["Chat"]
-            },
-            "items": [
-              {
-                "type": "MenuItem",
-                "name": "chatbotMenuItem",
-                "properties": {
-                  "key": "Chat",
-                  "link": "/"
-                },
-                "text": "Chat"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "Content",
-        "name": "chatbotContent",
-        "properties": {
-          "style": { "padding": "24px" }
-        },
-        "children": [
-          {
-            "type": "Card",
-            "name": "chatCard",
-            "properties": {
-              "title": "Chat with Our Bot"
-            },
-            "children": [
-              {
-                "type": "List",
-                "name": "messageList",
-                "properties": {
-                  "itemLayout": "horizontal",
-                  "dataSource": [
-                    {
-                      "role": "system",
-                      "content": "You are...",
-                      "editable": false
-                    },
-                    {
-                      "role": "user",
-                      "content": "Kris: Okay",
-                      "editable": true
-                    },
-                    {
-                      "role": "assistant",
-                      "content": "Go",
-                      "editable": false
-                    },
-                    {
-                      "role": "function",
-                      "content": "function_response",
-                      "name": "awesomeFunction",
-                      "args": { "name": "arg_name", "value": "arg_value" },
-                      "editable": true
-                    }
-                  ],
-                  "renderItem": {
-                    "type": "CustomView",
-                    "name": "messageItemView",
-                    "properties": {
-                      "viewName": "MessageItemView"
-                    }
-                  }
-                }
-              },
-              {
-                "type": "Search",
-                "name": "messageInput",
-                "properties": {
-                  "placeholder": "Send message to chatbot",
-                  "onSearch": "onSendMessage"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "Footer",
-        "name": "chatbotFooter",
-        "properties": {
-          "text": "© 2023 Chatbot Application"
-        }
-      }
-    ],
-    "functions": {
-      "onSendMessage": {
-        "description": "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response."
-      },
-      "onInitMessageListItem": {
-        "description": "The onInitMessageListItem function dynamically initializes each messageListItem component in the chat interface. It takes data from the dataItem of the message list's dataSource, setting properties like avatar and message content. This function is essential for rendering the chat flow, as it adapts the display of messages based on their type and sender, ensuring a responsive and user-friendly chat experience."
-      }
-    },
-    "customViews": {
-      "MessageItemView": {
-        "type": "List.Item",
-        "name": "messageListItem",
-        "properties": {
-          "dataIndex": -1,
-          "dataItem": {}
-        },
-        "onInit": "onInitMessageListItem",
-        "children": [
-          {
-            "type": "List.Item.Meta",
-            "name": "listItemMeta",
-            "properties": {
-              "avatar": {
-                "type": "Avatar",
-                "name": "listItemAvatar",
-                "properties": {
-                  "srcs": {
-                    "function": "https://xsgames.co/randomusers/assets/avatars/pixel/42.jpg",
-                    "user": "https://xsgames.co/randomusers/assets/avatars/pixel/45.jpg",
-                    "assistant": "https://xsgames.co/randomusers/assets/avatars/pixel/41.jpg",
-                    "system": "https://xsgames.co/randomusers/assets/avatars/pixel/21.jpg"
-                  }
-                }
-              },
-              "title": {
-                "type": "Text",
-                "name": "listItemTitle",
-                "properties": {}
-              }
-            }
-          },
-          {
-            "type": "ReactJson",
-            "name": "messageArgs",
-            "properties": {
-              "src": {},
-              "theme": "rjv-default",
-              "collapsed": false,
-              "enableClipboard": true,
-              "displayObjectSize": true,
-              "displayDataTypes": false,
-              "indentWidth": 4
-            }
-          },
-          {
-            "type": "Text",
-            "name": "messageContent"
-          }
-        ]
+  formItems.forEach((item) => {
+    if (item.type === "DatePicker") {
+      const fieldName = item.name;
+      if (newRecord[fieldName]) {
+        newRecord[fieldName] = dayjs(newRecord[fieldName]);
       }
     }
+  });
+
+  return newRecord;
+}
+
+export const populateObjectFormOnSelection = (
+  record,
+  rowIndex,
+  appState,
+  component
+) => {
+  console.log("Row selected:", record, rowIndex, component);
+  const objectForm = appState.getComponent(component.objectFormName);
+  console.log("objectForm", objectForm);
+  if (objectForm && objectForm.formInstance) {
+    const formattedRecord = initializeDateValuesForForm(objectForm, record);
+    objectForm.formInstance.setFieldsValue(formattedRecord);
+  } else {
+    console.error("Object form or form instance not found");
+  }
+};
+
+export function onInitProjectForm(appState, component) {
+  console.log("onInitProjectForm");
+  const projectForm = appState.getComponent("projectForm");
+
+  if (projectForm && projectForm.formInstance) {
+    const randomGuid = uuidv4();
+    projectForm.formInstance.setFieldsValue({
+      id: randomGuid,
+    });
+  } else {
+    console.error("Project form or form instance not found");
   }
 }
+
+/**
+ * Initializes a message list item with data from the message list's dataSource.
+ * @param {AppState} appState - The state of the application.
+ * @param {Component} component - The messageListItem component to initialize.
+ */
+export function onInitMessageListItem(appState, component) {
+  const dataItem = component.properties.dataItem;
+  const dataIndex = component.properties.dataIndex;
+
+  if (!dataItem) {
+    console.error("Data item not found for message list item initialization.");
+    return;
+  }
+
+  // Adjust component names based on dataIndex
+  const adjustedName = (baseName) => `${baseName}_${dataIndex}`;
+
+  // Update Title component
+  const listItemTitleName = adjustedName("listItemTitle");
+  appState.changeComponent(listItemTitleName, {
+    text: dataItem.role.toUpperCase(), // For example, setting text to role in uppercase
+  });
+
+  // Retrieve the avatar sources from listItemAvatar
+  const listItemAvatar = appState.getComponent(adjustedName("listItemAvatar"));
+  const avatarSrcs = listItemAvatar ? listItemAvatar.properties.srcs : {};
+
+  // Determine the correct avatar source based on the role
+  const avatarSrc = avatarSrcs[dataItem.role] || "";
+
+  // Update Avatar component
+  const avatarName = adjustedName("listItemAvatar");
+  appState.changeComponent(avatarName, { src: avatarSrc });
+
+  // Update Message Content
+  const messageContentName = adjustedName("messageContent");
+  appState.changeComponent(messageContentName, {
+    text: dataItem.content,
+  });
+
+  // Handle additional arguments for function type messages
+  if (dataItem.role === "function" && dataItem.args) {
+    const messageArgsName = adjustedName("messageArgs");
+    appState.changeComponent(messageArgsName, { src: dataItem.args });
+  } else {
+    // Hide messageArgs component if the role is not a function
+    const messageArgsName = adjustedName("messageArgs");
+    appState.changeComponent(messageArgsName, { style: { display: "none" } });
+  }
+}
+```
+
+```javascript
+// components/DynamicForm.jsx
+import React from "react";
+import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
+import * as appFunctions from "../appFunctions";
+
+const { TextArea } = Input;
+const { RangePicker } = DatePicker;
+
+const DynamicForm = ({ component, appState }) => {
+  const [form] = Form.useForm();
+  const currentComponentInstance = appState.getComponentInstance(
+    component.name
+  );
+  if (currentComponentInstance !== form) {
+    appState.setComponentInstance(component.name, form);
+    if (currentComponentInstance === undefined && component.onInit)
+      if (appFunctions[component.onInit] === undefined)
+        console.log(`Function ${component.onInit} not found`);
+      else appFunctions[component.onInit](appState);
+  }
+
+  const renderFormItem = (item) => {
+    // Switch statement to render form input based on type
+    const formInput = (() => {
+      switch (item.type) {
+        case "Input":
+          return <Input {...item.properties} />;
+        case "DatePicker":
+          return <DatePicker {...item.properties} />;
+        case "RangePicker":
+          return <RangePicker {...item.properties} />;
+        case "Select":
+          return <Select {...item.properties} />;
+        case "TextArea":
+          return <TextArea {...item.properties} />;
+        case "InputNumber":
+          return <InputNumber {...item.properties} />;
+        case "Button":
+          return <Button {...item.properties}>{item.properties.text}</Button>;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <Form.Item {...item} key={item.name} onChange={undefined}>
+        {formInput}
+      </Form.Item>
+    );
+  };
+
+  return (
+    <Form
+      form={form}
+      layout={component.properties.layout}
+      onFinish={(values) =>
+        appFunctions[component.properties.onSubmit](values, appState, component)
+      }
+      onFieldsChange={(changedFields, allFields) => {
+        changedFields.forEach((field) => {
+          const fieldName = field.name[field.name.length - 1];
+          // Check if the changed field has a linked function and execute it
+          const fieldComponent = component.items.find(
+            (item) => item.name === fieldName
+          );
+          if (
+            fieldComponent &&
+            fieldComponent.onChange &&
+            appFunctions[fieldComponent.onChange]
+          ) {
+            appFunctions[fieldComponent.onChange](
+              form,
+              fieldComponent,
+              appState
+            );
+          }
+        });
+      }}
+    >
+      {component.items.map(renderFormItem)}
+    </Form>
+  );
+};
+
+export default DynamicForm;
 ```
