@@ -1,4 +1,4 @@
-// utils/AppState.js
+// utils/AppState.ts
 
 import { Location } from "react-router-dom";
 import { App, Component } from "../types/types";
@@ -50,8 +50,10 @@ export default class AppState {
       return currentComponent;
     }
 
+    const skipKeys = ["dataSource", "current"];
     // Recursive case: iterate over all properties
     for (const key in currentComponent) {
+      if (skipKeys.includes(key)) continue;
       const prop = currentComponent[key];
 
       // If the property is an object or an array, search recursively

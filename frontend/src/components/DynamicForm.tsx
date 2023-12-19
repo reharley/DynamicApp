@@ -1,4 +1,4 @@
-// components/DynamicForm.jsx
+// components/DynamicForm.tsx
 import React from "react";
 import { Form, InputNumber, Input, DatePicker, Button, Select } from "antd";
 import * as appFunctions from "../appFunctions";

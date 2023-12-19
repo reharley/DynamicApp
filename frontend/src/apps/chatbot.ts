@@ -1,3 +1,4 @@
+// chatbot.ts
 import { App } from "../types/types";
 
 const chatbotApp: App = {
@@ -56,25 +57,7 @@ const chatbotApp: App = {
                 dataSource: [
                   {
                     role: "system",
-                    content: "You are...",
-                    editable: false,
-                  },
-                  {
-                    role: "user",
-                    content: "Kris: Okay",
-                    editable: true,
-                  },
-                  {
-                    role: "assistant",
-                    content: "Go",
-                    editable: false,
-                  },
-                  {
-                    role: "function",
-                    content: "function_response",
-                    name: "awesomeFunction",
-                    args: { name: "arg_name", value: "arg_value" },
-                    editable: true,
+                    content: "You are a helpful assistant.",
                   },
                 ],
                 renderItem: {
@@ -89,9 +72,9 @@ const chatbotApp: App = {
             {
               type: "Search",
               name: "messageInput",
+              onSearch: "sendMessage",
               properties: {
                 placeholder: "Send message to chatbot",
-                onSearch: "onSendMessage",
               },
             },
           ],
@@ -107,7 +90,7 @@ const chatbotApp: App = {
     },
   ],
   functions: {
-    onSendMessage: {
+    sendMessage: {
       description:
         "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response.",
     },
@@ -166,8 +149,15 @@ const chatbotApp: App = {
           },
         },
         {
-          type: "Text",
+          type: "PreformattedText",
           name: "messageContent",
+          properties: {
+            style: {
+              whiteSpace: "pre-wrap", // Wraps the text
+              wordWrap: "break-word", // This ensures that the text breaks to prevent overflow
+              maxWidth: "100%", // This limits the width to the parent container
+            },
+          },
         },
       ],
     },

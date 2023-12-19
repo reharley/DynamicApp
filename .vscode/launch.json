@@ -12,6 +12,14 @@
       "webRoot": "${workspaceFolder}"
     },
     {
+      "type": "node",
+      "request": "attach",
+      "name": "Node: attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "restart": true,
+      "protocol": "inspector"
+    },
+    {
       "command": "npm start",
       "cwd": "${workspaceFolder}/backend",
       "name": "backend",

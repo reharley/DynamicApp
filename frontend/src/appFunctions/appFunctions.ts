@@ -1,10 +1,11 @@
-// appFunctions.js
+// appFunctions.ts
 import dayjs from "dayjs";
 
-import objectService from "../services/objectService";
+import webService from "../services/webServices";
 import AppState from "../utils/AppState";
 import {
   Component,
+  Message,
   onFormChange,
   onFormFinish,
   onInit,
@@ -12,6 +13,47 @@ import {
   onSearch,
 } from "../types/types";
 import { FormInstance } from "rc-field-form";
+
+export const sendMessage: onSearch = async (
+  message: string,
+  appState: AppState,
+  component: Component
+) => {
+  // Retrieve the current message list
+  const messageList = appState.getComponent("messageList");
+  let newDataSource: Message[] = [];
+
+  if (messageList) {
+    // Append the new user message to the existing dataSource
+    newDataSource = [
+      ...messageList.properties.dataSource,
+      { role: "user", content: message },
+    ];
+
+    // Update message list with the new message
+    appState.changeComponent("messageList", { dataSource: newDataSource });
+  }
+
+  // Set loading indicator
+  appState.changeComponent("messageInput", { loading: true, value: "" });
+
+  try {
+    // Send the updated dataSource (including the new user message) to the chatbot service
+    const chatbotResponse = await webService.chatWithOpenAI(newDataSource);
+
+    // Update message list with the response from the chatbot
+    appState.changeComponent("messageList", { dataSource: chatbotResponse });
+  } catch (error) {
+    console.error("Error in sending message: " + error.message);
+    // Handle error (e.g., display error message to user)
+  } finally {
+    // Reset loading indicator
+    appState.changeComponent("messageInput", {
+      loading: false,
+      value: undefined,
+    });
+  }
+};
 
 export const updateEndDateRestriction: onFormFinish = (
   form: FormInstance,
@@ -57,10 +99,10 @@ export const submitObject: onFormFinish = async (
     // Check if formData has an id
     if (values.id) {
       // Update the existing project
-      await objectService.updateObject(component.objectType, values.id, values);
+      await webService.updateObject(component.objectType, values.id, values);
     } else {
       // Create a new project
-      await objectService.createObject(component.objectType, values);
+      await webService.createObject(component.objectType, values);
     }
 
     // Reload the project data to reflect changes
@@ -79,7 +121,7 @@ export const loadObjectData: onInit = async (
 ) => {
   try {
     if (component.objectType === undefined) return;
-    const objects = await objectService.getAllObjects(component.objectType);
+    const objects = await webService.getAllObjects(component.objectType);
     appState.changeComponent(component.name, { dataSource: objects });
   } catch (error) {
     console.error("Error loading project data:", error);
@@ -191,4 +233,4 @@ export const rowClickFunctions: Record<string, onRowClick> = {
   populateObjectFormOnSelection,
 };
 
-export const searchFunctions: Record<string, onSearch> = {};
+export const searchFunctions: Record<string, onSearch> = { sendMessage };

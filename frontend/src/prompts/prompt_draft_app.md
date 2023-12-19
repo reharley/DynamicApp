@@ -1,653 +1,164 @@
-In the app json, refactor Tabs by making the items match this structure:
-example structure:
+Update the messageContent with style properties to fit the content. Currently the text go beyond the chatCard borders
 
-```json
-[
-  {
-    "key": "1",
-    "label": "Tab 1",
-    "children": "Content of Tab Pane 1"
+```typescript
+// chatbot.ts
+import { App } from "../types/types";
+
+const chatbotApp: App = {
+  type: "Layout",
+  name: "chatbotLayout",
+  properties: {
+    style: { layout: "vertical" },
   },
-  {
-    "key": "2",
-    "label": "Tab 2",
-    "children": "Content of Tab Pane 2"
-  },
-  {
-    "key": "3",
-    "label": "Tab 3",
-    "children": "Content of Tab Pane 3"
-  }
-]
-```
-
-app json:
-
-```json
-{
-  "app": {
-    "type": "Layout",
-    "name": "mainLayout",
-    "properties": {
-      "style": { "layout": "vertical" }
+  children: [
+    {
+      type: "Header",
+      name: "chatbotHeader",
+      properties: {},
+      children: [
+        {
+          type: "Menu",
+          name: "chatbotMenu",
+          properties: {
+            theme: "dark",
+            mode: "horizontal",
+            defaultSelectedKeys: ["Chat"],
+          },
+          items: [
+            {
+              type: "MenuItem",
+              name: "chatbotMenuItem",
+              properties: {
+                key: "Chat",
+                link: "/",
+                text: "Chat",
+              },
+            },
+          ],
+        },
+      ],
     },
-    "children": [
-      {
-        "type": "Header",
-        "name": "mainHeader",
-        "properties": {},
-        "children": [
-          {
-            "type": "Menu",
-            "name": "mainMenu",
-            "properties": {
-              "theme": "dark",
-              "mode": "horizontal",
-              "defaultSelectedKeys": ["Browse"]
-            },
-            "items": [
-              {
-                "type": "MenuItem",
-                "name": "browseBooks",
-                "properties": {
-                  "key": "Browse",
-                  "link": "/browse"
-                },
-                "text": "Browse Books"
-              },
-              {
-                "type": "MenuItem",
-                "name": "userProfile",
-                "properties": {
-                  "key": "Profile",
-                  "link": "/profile"
-                },
-                "text": "My Profile"
-              },
-              {
-                "type": "MenuItem",
-                "name": "adminPanel",
-                "properties": {
-                  "key": "Admin",
-                  "link": "/admin"
-                },
-                "text": "Admin Panel"
-              }
-            ]
-          }
-        ]
+    {
+      type: "Content",
+      name: "chatbotContent",
+      properties: {
+        style: { padding: "24px" },
       },
-      {
-        "type": "Content",
-        "name": "mainContent",
-        "properties": {
-          "style": { "padding": "24px" }
-        },
-        "children": [
-          {
-            "type": "Routes",
-            "name": "mainRoutes",
-            "children": [
-              {
-                "type": "Route",
-                "name": "browseRoute",
-                "properties": {
-                  "path": "/browse",
-                  "element": {
-                    "type": "CustomView",
-                    "name": "bookListView",
-                    "properties": {
-                      "viewName": "BookListView",
-                      "searchAlgorithm": "Relevance-based search with filters",
-                      "realTimeAvailabilityUpdate": true
-                    }
-                  }
-                }
-              },
-              {
-                "type": "Route",
-                "name": "profileRoute",
-                "properties": {
-                  "path": "/profile",
-                  "element": {
-                    "type": "CustomView",
-                    "name": "userProfileView",
-                    "properties": {
-                      "viewName": "UserProfileView",
-                      "userWorkflow": "Manage account, write reviews, view order history"
-                    }
-                  }
-                }
-              },
-              {
-                "type": "Route",
-                "name": "adminRoute",
-                "properties": {
-                  "path": "/admin",
-                  "element": {
-                    "type": "CustomView",
-                    "name": "adminPanelView",
-                    "properties": {
-                      "viewName": "AdminPanelView",
-                      "managementFunctions": "Catalog management, order processing, user management"
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "Footer",
-        "name": "mainFooter",
-        "properties": {
-          "text": "© 2023 Online Bookstore"
-        }
-      }
-    ],
-    "customViews": {
-      "BookListView": {
-        "type": "Row",
-        "name": "bookListRow",
-        "properties": {
-          "gutter": 16
-        },
-        "children": [
-          {
-            "type": "Col",
-            "name": "bookListColumn",
-            "properties": {
-              "span": 24
-            },
-            "children": [
-              {
-                "type": "Search",
-                "name": "bookSearch",
-                "properties": {
-                  "placeholder": "Search for books",
-                  "onSearch": "searchBooks"
-                }
-              },
-              {
-                "type": "Table",
-                "name": "bookTable",
-                "objectType": "Book",
-                "properties": {
-                  "columns": [
-                    { "title": "Title", "dataIndex": "title", "key": "title" },
-                    {
-                      "title": "Author",
-                      "dataIndex": "author",
-                      "key": "author"
-                    },
-                    { "title": "Price", "dataIndex": "price", "key": "price" },
-                    { "title": "ISBN", "dataIndex": "isbn", "key": "isbn" },
-                    { "title": "Genre", "dataIndex": "genre", "key": "genre" },
-                    {
-                      "title": "Description",
-                      "dataIndex": "description",
-                      "key": "description"
-                    }
-                  ],
-                  "dataSource": [],
-                  "onRow": { "click": "viewBookDetails" }
-                },
-                "onInit": "loadBookData"
-              }
-            ]
-          }
-        ]
-      },
-      "UserProfileView": {
-        "type": "Row",
-        "name": "userProfileRow",
-        "properties": {
-          "gutter": 16
-        },
-        "children": [
-          {
-            "type": "Col",
-            "name": "userProfileColumn",
-            "properties": {
-              "span": 24
-            },
-            "children": [
-              {
-                "type": "Form",
-                "name": "userProfileForm",
-                "objectType": "UserProfile",
-                "properties": {
-                  "layout": "vertical",
-                  "onSubmit": "submitUserProfile"
-                },
-                "items": [
-                  {
-                    "type": "Input",
-                    "name": "id",
-                    "style": { "display": "none" }
-                  },
-                  { "label": "Name", "type": "Input", "name": "name" },
-                  { "label": "Email", "type": "Input", "name": "email" },
-                  { "label": "Address", "type": "Input", "name": "address" },
-                  {
-                    "type": "Button",
-                    "name": "saveProfileButton",
-                    "properties": {
-                      "type": "primary",
-                      "htmlType": "submit",
-                      "text": "Save"
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "AdminPanelView": {
-        "type": "Row",
-        "name": "adminPanelRow",
-        "properties": {
-          "gutter": 16
-        },
-        "children": [
-          {
-            "type": "Col",
-            "name": "adminPanelColumn",
-            "properties": {
-              "span": 24
-            },
-            "children": [
-              {
-                "type": "Tabs",
-                "name": "adminTabs",
-                "properties": {},
-                "items": [
-                  {
-                    "type": "TabPane",
-                    "name": "catalogManagementTab",
-                    "properties": {
-                      "tab": "Catalog Management",
-                      "key": "catalog"
-                    },
-                    "children": [
-                      {
-                        "type": "CustomType",
-                        "name": "catalogManagementView",
-                        "properties": {
-                          "viewName": "CatalogManagementView"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "TabPane",
-                    "name": "orderProcessingTab",
-                    "properties": {
-                      "tab": "Order Processing",
-                      "key": "orders"
-                    },
-                    "children": [
-                      {
-                        "type": "CustomType",
-                        "name": "orderProcessingView",
-                        "properties": {
-                          "viewName": "OrderProcessingView"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "TabPane",
-                    "name": "userManagementTab",
-                    "properties": {
-                      "tab": "User Management",
-                      "key": "users"
-                    },
-                    "children": [
-                      {
-                        "type": "CustomType",
-                        "name": "userManagementView",
-                        "properties": {
-                          "viewName": "UserManagementView"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "CatalogManagementView": {
-        "type": "Row",
-        "name": "catalogManagementRow",
-        "properties": {
-          "gutter": 16
-        },
-        "children": [
-          {
-            "type": "Col",
-            "name": "catalogManagementColumn",
-            "properties": {
-              "span": 12
-            },
-            "children": [
-              {
-                "type": "Form",
-                "name": "bookForm",
-                "objectType": "Book",
-                "properties": {
-                  "layout": "vertical",
-                  "onSubmit": "submitBookForm"
-                },
-                "items": [
-                  {
-                    "type": "Input",
-                    "name": "id",
-                    "style": { "display": "none" }
-                  },
-                  {
-                    "label": "Title",
-                    "type": "Input",
-                    "name": "title"
-                  },
-                  {
-                    "label": "Author",
-                    "type": "Input",
-                    "name": "author"
-                  },
-                  {
-                    "label": "Price",
-                    "type": "Input",
-                    "name": "price"
-                  },
-                  {
-                    "label": "ISBN",
-                    "type": "Input",
-                    "name": "isbn"
-                  },
-                  {
-                    "label": "Genre",
-                    "type": "Select",
-                    "name": "genre"
-                  },
-                  {
-                    "label": "Cover Image",
-                    "type": "Upload",
-                    "name": "coverImage"
-                  },
-                  {
-                    "label": "Description",
-                    "type": "TextArea",
-                    "name": "description"
-                  }
-                ]
-              }
-            ]
+      children: [
+        {
+          type: "Card",
+          name: "chatCard",
+          properties: {
+            title: "Chat with Our Bot",
           },
-          {
-            "type": "Col",
-            "name": "catalogManagementColumn",
-            "properties": {
-              "span": 12
+          children: [
+            {
+              type: "List",
+              name: "messageList",
+              properties: {
+                itemLayout: "vertical",
+                dataSource: [
+                  {
+                    role: "system",
+                    content: "You are a helpful assistant.",
+                  },
+                ],
+                renderItem: {
+                  type: "CustomView",
+                  name: "messageItemView",
+                  properties: {
+                    viewName: "MessageItemView",
+                  },
+                },
+              },
             },
-            "children": [
-              {
-                "type": "Table",
-                "name": "bookTable",
-                "objectType": "Book",
-                "properties": {},
-                "onInit": "loadBookData"
-              }
-            ]
-          }
-        ]
-      },
-      "OrderProcessingView": {
-        "type": "Row",
-        "name": "orderProcessingRow",
-        "properties": {
-          "gutter": 16
+            {
+              type: "Search",
+              name: "messageInput",
+              onSearch: "sendMessage",
+              properties: {
+                placeholder: "Send message to chatbot",
+              },
+            },
+          ],
         },
-        "children": [
-          {
-            "type": "Col",
-            "name": "orderProcessingColumn",
-            "properties": {
-              "span": 12
-            },
-            "children": [
-              {
-                "type": "Form",
-                "name": "orderForm",
-                "objectType": "Order",
-                "properties": {
-                  "layout": "vertical",
-                  "onSubmit": "submitOrderForm"
-                },
-                "items": [
-                  {
-                    "type": "Input",
-                    "name": "id",
-                    "style": { "display": "none" }
-                  },
-                  {
-                    "label": "Order ID",
-                    "type": "Input",
-                    "name": "orderId"
-                  },
-                  {
-                    "label": "Book ID",
-                    "type": "Input",
-                    "name": "bookId"
-                  },
-                  {
-                    "label": "User ID",
-                    "type": "Input",
-                    "name": "userId"
-                  },
-                  {
-                    "label": "Quantity",
-                    "type": "InputNumber",
-                    "name": "quantity"
-                  },
-                  {
-                    "label": "Order Date",
-                    "type": "DatePicker",
-                    "name": "orderDate"
-                  },
-                  {
-                    "label": "Total Amount",
-                    "type": "InputNumber",
-                    "name": "totalAmount"
-                  },
-                  {
-                    "label": "Status",
-                    "type": "Select",
-                    "name": "status",
-                    "properties": {
-                      "options": [
-                        { "label": "Pending", "value": "Pending" },
-                        { "label": "Completed", "value": "Completed" },
-                        { "label": "Cancelled", "value": "Cancelled" }
-                      ]
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "Col",
-            "name": "orderProcessingColumn",
-            "properties": {
-              "span": 12
-            },
-            "children": [
-              {
-                "type": "Table",
-                "name": "orderTable",
-                "objectType": "Order",
-                "properties": {
-                  "columns": [
-                    {
-                      "title": "Order ID",
-                      "dataIndex": "orderId",
-                      "key": "orderId"
-                    },
-                    {
-                      "title": "Book ID",
-                      "dataIndex": "bookId",
-                      "key": "bookId"
-                    },
-                    {
-                      "title": "User ID",
-                      "dataIndex": "userId",
-                      "key": "userId"
-                    },
-                    {
-                      "title": "Quantity",
-                      "dataIndex": "quantity",
-                      "key": "quantity"
-                    },
-                    {
-                      "title": "Order Date",
-                      "dataIndex": "orderDate",
-                      "key": "orderDate"
-                    },
-                    {
-                      "title": "Total Amount",
-                      "dataIndex": "totalAmount",
-                      "key": "totalAmount"
-                    },
-                    {
-                      "title": "Status",
-                      "dataIndex": "status",
-                      "key": "status"
-                    }
-                  ],
-                  "dataSource": [],
-                  "onRowClick": "viewOrderDetails"
-                },
-                "onInit": "loadOrderData"
-              }
-            ]
-          }
-        ]
+      ],
+    },
+    {
+      type: "Footer",
+      name: "chatbotFooter",
+      properties: {
+        text: "© 2023 Chatbot Application",
       },
-      "UserManagementView": {
-        "type": "Row",
-        "name": "userManagementRow",
-        "properties": {
-          "gutter": 16
-        },
-        "children": [
-          {
-            "type": "Col",
-            "name": "userManagementColumn",
-            "properties": {
-              "span": 12
-            },
-            "children": [
-              {
-                "type": "Form",
-                "name": "userForm",
-                "objectType": "User",
-                "properties": {
-                  "layout": "vertical",
-                  "onSubmit": "submitUserForm"
+    },
+  ],
+  functions: {
+    sendMessage: {
+      description:
+        "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response.",
+    },
+    onInitMessageListItem: {
+      description:
+        "The onInitMessageListItem function dynamically initializes each messageListItem component in the chat interface. It takes data from the dataItem of the message list's dataSource, setting properties like avatar and message content. This function is essential for rendering the chat flow, as it adapts the display of messages based on their type and sender, ensuring a responsive and user-friendly chat experience.",
+    },
+  },
+  customViews: {
+    MessageItemView: {
+      type: "List.Item",
+      name: "messageListItem",
+      properties: {
+        dataIndex: -1,
+        dataItem: {},
+      },
+      onInit: "onInitMessageListItem",
+      children: [
+        {
+          type: "List.Item.Meta",
+          name: "listItemMeta",
+          properties: {
+            avatar: {
+              type: "Avatar",
+              name: "listItemAvatar",
+              properties: {
+                srcs: {
+                  function:
+                    "https://xsgames.co/randomusers/assets/avatars/pixel/42.jpg",
+                  user: "https://xsgames.co/randomusers/assets/avatars/pixel/45.jpg",
+                  assistant:
+                    "https://xsgames.co/randomusers/assets/avatars/pixel/41.jpg",
+                  system:
+                    "https://xsgames.co/randomusers/assets/avatars/pixel/21.jpg",
                 },
-                "items": [
-                  {
-                    "type": "Input",
-                    "name": "id",
-                    "style": { "display": "none" }
-                  },
-                  {
-                    "label": "User ID",
-                    "type": "Input",
-                    "name": "userId"
-                  },
-                  {
-                    "label": "Name",
-                    "type": "Input",
-                    "name": "name"
-                  },
-                  {
-                    "label": "Email",
-                    "type": "Input",
-                    "name": "email"
-                  },
-                  {
-                    "label": "Role",
-                    "type": "Select",
-                    "name": "role",
-                    "properties": {
-                      "options": [
-                        { "label": "Administrator", "value": "Administrator" },
-                        {
-                          "label": "Registered User",
-                          "value": "RegisteredUser"
-                        },
-                        { "label": "Guest", "value": "Guest" }
-                      ]
-                    }
-                  },
-                  {
-                    "label": "Status",
-                    "type": "Select",
-                    "name": "status",
-                    "properties": {
-                      "options": [
-                        { "label": "Active", "value": "Active" },
-                        { "label": "Inactive", "value": "Inactive" }
-                      ]
-                    }
-                  }
-                ]
-              }
-            ]
+              },
+            },
+            title: {
+              type: "Text",
+              name: "listItemTitle",
+              properties: {},
+            },
           },
-          {
-            "type": "Col",
-            "name": "userManagementColumn",
-            "properties": {
-              "span": 12
-            },
-            "children": [
-              {
-                "type": "Table",
-                "name": "userTable",
-                "objectType": "User",
-                "properties": {
-                  "columns": [
-                    {
-                      "title": "User ID",
-                      "dataIndex": "userId",
-                      "key": "userId"
-                    },
-                    { "title": "Name", "dataIndex": "name", "key": "name" },
-                    { "title": "Email", "dataIndex": "email", "key": "email" },
-                    { "title": "Role", "dataIndex": "role", "key": "role" },
-                    {
-                      "title": "Status",
-                      "dataIndex": "status",
-                      "key": "status"
-                    }
-                  ],
-                  "dataSource": [],
-                  "onRowClick": "viewUserDetails"
-                },
-                "onInit": "loadUserData"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
+        },
+        {
+          type: "ReactJson",
+          name: "messageArgs",
+          properties: {
+            src: {},
+            theme: "rjv-default",
+            collapsed: false,
+            enableClipboard: true,
+            displayObjectSize: true,
+            displayDataTypes: false,
+            indentWidth: 4,
+          },
+        },
+        {
+          type: "PreformattedText",
+          name: "messageContent",
+        },
+      ],
+    },
+  },
+};
+
+export default chatbotApp;
 ```

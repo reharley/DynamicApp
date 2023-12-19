@@ -1,6 +1,6 @@
 // submitObject.test.js
 import { submitObject } from "../appFunctions";
-import objectService from "../../services/objectService";
+import objectService from "../../services/webServices";
 
 jest.mock("../../services/objectService", () => ({
   createObject: jest.fn(),

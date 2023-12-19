@@ -1,19 +1,21 @@
-// objects.js
+// webService.js
 const express = require("express");
 const router = express.Router();
 
 // Assume MockDatabasePlugin and SQLDatabasePlugin are implemented plugins
 const MockDatabasePlugin = require("../plugins/mockDatabasePlugin");
 const SQLDatabasePlugin = require("../plugins/sqlDatabasePlugin");
+const OpenAIPlugin = require("../plugins/openAiPlugin");
 
 // Initialize plugins
 const plugins = {
   mock: new MockDatabasePlugin(),
   sql: new SQLDatabasePlugin(),
+  openai: new OpenAIPlugin(),
 };
 
-// Single /objects endpoint
-router.post("/objects", (req, res) => {
+// Single /webService endpoint
+router.post("/webService", (req, res) => {
   const { pluginType, action } = req.body;
   console.log("pluginType", pluginType, "action", action);
   // Select the appropriate plugin
@@ -25,7 +27,7 @@ router.post("/objects", (req, res) => {
   // Execute the action
   try {
     if (typeof plugin[action] === "function") {
-      // Call the action method with request and response objects
+      // Call the action method with request and response webService
       plugin[action](req, res);
     } else {
       res.status(400).json({ message: "Invalid action" });

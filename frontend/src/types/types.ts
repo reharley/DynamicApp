@@ -1,9 +1,13 @@
+// types.ts
 import { FormInstance } from "rc-field-form";
 import AppState from "../utils/AppState";
 
-// types.ts
-import * as appFunctions from "../appFunctions";
-type AppFunctionNames = keyof typeof appFunctions;
+export interface Message {
+  role: string;
+  content: string;
+  args?: any;
+  functionName?: string;
+}
 export type onSearch = (
   searchValue: string,
   appState: AppState,

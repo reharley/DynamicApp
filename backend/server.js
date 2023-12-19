@@ -1,6 +1,7 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
-const objectRoutes = require("./routes/objects");
+const objectRoutes = require("./routes/webService");
 
 const app = express();
 

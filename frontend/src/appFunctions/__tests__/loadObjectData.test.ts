@@ -1,5 +1,5 @@
 import { loadObjectData } from "../appFunctions";
-import objectService from "../../services/objectService";
+import objectService from "../../services/webServices";
 
 // Mock the objectService
 jest.mock("../../services/objectService", () => ({

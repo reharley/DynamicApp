@@ -1,4 +1,4 @@
-// components/DynamicApp.js
+// components/DynamicApp.tsx
 import React, { useState, useRef } from "react";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
 import ReactJson from "react-json-view";
@@ -139,6 +139,9 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
 
     case "Text":
       return <Text {...properties}>{properties.text}</Text>;
+
+    case "PreformattedText":
+      return <pre {...properties}>{properties.text}</pre>;
     case "string":
       return component.properties.text;
 
@@ -176,7 +179,6 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
       );
 
     case "List.Item.Meta":
-      console.log("List.Item.Meta", commonProps);
       return (
         <List.Item.Meta
           avatar={
