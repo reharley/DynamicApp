@@ -1,4 +1,4 @@
-// services/webService.ts
+// services/webServices.ts
 import axios from "axios";
 import { Message } from "../types/types";
 
@@ -26,6 +26,11 @@ const chatWithOpenAI = async (messages: Message[]) => {
 // Fetches all instances of a specified object type from the server.
 const getAllObjects = async (objectType: string) => {
   return sendWebServiceRequest("mock", "getAllObjects", { type: objectType });
+};
+
+// Function to get the folder structure from the server
+const getFolderStructure = async (folderPath?: string) => {
+  return sendWebServiceRequest("fs", "getFolderStructure", undefined);
 };
 
 // Creates a new instance of a specified object type on the server.
@@ -62,4 +67,5 @@ export default {
   updateObject,
   deleteObject,
   chatWithOpenAI,
+  getFolderStructure,
 };

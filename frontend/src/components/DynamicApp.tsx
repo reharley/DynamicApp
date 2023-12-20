@@ -111,7 +111,39 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
           },
         };
       };
-      return <Table {...commonProps} onRow={onRow} />;
+      const rowSelection = {
+        ...properties.rowSelection,
+        onChange: (
+          record: any,
+          selected: any,
+          selectedRows: any[],
+          nativeEvent: any
+        ) => {
+          if (
+            component.properties.rowSelection &&
+            component.properties.rowSelection.onChange
+          ) {
+            const functionName = component.properties.rowSelection.onChange;
+            if (appFunctions.rowSelectionSelectFunctions[functionName]) {
+              appFunctions.rowSelectionSelectFunctions[functionName](
+                record,
+                selected,
+                selectedRows,
+                nativeEvent,
+                appState,
+                component
+              );
+            }
+          }
+        },
+      };
+      return (
+        <Table
+          {...commonProps}
+          onRow={properties.onRow && onRow}
+          rowSelection={properties.rowSelection && rowSelection}
+        />
+      );
     case "Footer":
       return <Footer {...commonProps} />;
     case "Modal":
@@ -237,16 +269,13 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
               children: (
                 <>
                   {item.children &&
-                    item.children.map((child) => {
-                      console.log("child", child);
-                      return (
-                        <RenderComponent
-                          key={child.name}
-                          component={child}
-                          appState={appState}
-                        />
-                      );
-                    })}
+                    item.children.map((child) => (
+                      <RenderComponent
+                        key={child.name}
+                        component={child}
+                        appState={appState}
+                      />
+                    ))}
                 </>
               ),
             }))

@@ -1,6 +1,4 @@
-Create a plugin for the webService endpoint that can work with system files.
-
-One of the functions should be an object that returns the folder structure in an object.
+fileSelectionTable needs to pull all the files onInit in the base directory and display them in the table as a flat list of files to select. The user can select multiple files. add the function description to the functions property of chatbot
 
 ```typescript
 // utils/AppState.ts
@@ -16,6 +14,9 @@ export default class AppState {
   private customViewCache: { [key: string]: any };
   getCustomView(name: string) {
     return this.app.customViews[name];
+  }
+  getApp() {
+    return this.app;
   }
   setState(app: App, setAppState: (app: App) => void, location: Location) {
     this.app = app;
@@ -55,8 +56,10 @@ export default class AppState {
       return currentComponent;
     }
 
+    const skipKeys = ["dataSource", "current"];
     // Recursive case: iterate over all properties
     for (const key in currentComponent) {
+      if (skipKeys.includes(key)) continue;
       const prop = currentComponent[key];
 
       // If the property is an object or an array, search recursively
@@ -161,8 +164,8 @@ export default class AppState {
 
 ```typescript
 // components/DynamicApp.tsx
-import React, { useState, useRef } from "react";
-import { Link, Routes, Route, useLocation } from "react-router-dom";
+import React, { useRef } from "react";
+import { Link, Routes, Route } from "react-router-dom";
 import ReactJson from "react-json-view";
 import {
   Avatar,
@@ -181,20 +184,18 @@ import {
 } from "antd";
 
 import DynamicForm from "./DynamicForm";
-import appJSON from "../apps/chatbot";
 import AppState from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
-import { App, Component } from "../types/types";
+import { Component } from "../types/types";
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
-let _app: App = appJSON;
-let appState: AppState;
 
 interface RenderComponentProps {
   component: Component;
+  appState: AppState;
 }
-const RenderComponent = ({ component }: RenderComponentProps) => {
+const RenderComponent = ({ component, appState }: RenderComponentProps) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
   component.current = componentRef.current;
@@ -213,7 +214,11 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
     children:
       children &&
       children.map((child) => (
-        <RenderComponent key={child.name} component={child} />
+        <RenderComponent
+          key={child.name}
+          component={child}
+          appState={appState}
+        />
       )),
   };
 
@@ -286,7 +291,10 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
                 key={child.name}
                 path={child.properties.path}
                 element={
-                  <RenderComponent component={child.properties.element} />
+                  <RenderComponent
+                    component={child.properties.element}
+                    appState={appState}
+                  />
                 }
               />
             ))}
@@ -296,11 +304,15 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
       return (
         <RenderComponent
           component={appState.getCustomView(properties.viewName)}
+          appState={appState}
         />
       );
 
     case "Text":
       return <Text {...properties}>{properties.text}</Text>;
+
+    case "PreformattedText":
+      return <pre {...properties}>{properties.text}</pre>;
     case "string":
       return component.properties.text;
 
@@ -319,7 +331,10 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
             return (
               <List.Item>
                 {customViewClone && (
-                  <RenderComponent component={customViewClone} />
+                  <RenderComponent
+                    component={customViewClone}
+                    appState={appState}
+                  />
                 )}
               </List.Item>
             );
@@ -332,26 +347,40 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
         <List.Item {...commonProps}>
           {children &&
             children.map((child) => (
-              <RenderComponent key={child.name} component={child} />
+              <RenderComponent
+                key={child.name}
+                component={child}
+                appState={appState}
+              />
             ))}
         </List.Item>
       );
 
     case "List.Item.Meta":
-      console.log("List.Item.Meta", commonProps);
       return (
         <List.Item.Meta
           avatar={
             properties.avatar && (
-              <RenderComponent component={properties.avatar} />
+              <RenderComponent
+                component={properties.avatar}
+                appState={appState}
+              />
             )
           }
           title={
-            properties.title && <RenderComponent component={properties.title} />
+            properties.title && (
+              <RenderComponent
+                component={properties.title}
+                appState={appState}
+              />
+            )
           }
           description={
             properties.description && (
-              <RenderComponent component={properties.description} />
+              <RenderComponent
+                component={properties.description}
+                appState={appState}
+              />
             )
           }
         />
@@ -369,14 +398,18 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
           items={
             component.items &&
             component.items.map((item) => ({
-              ...item,
+              ...item.properties,
               children: (
                 <>
                   {item.children &&
                     item.children.map((child) => {
                       console.log("child", child);
                       return (
-                        <RenderComponent key={child.name} component={child} />
+                        <RenderComponent
+                          key={child.name}
+                          component={child}
+                          appState={appState}
+                        />
                       );
                     })}
                 </>
@@ -411,65 +444,73 @@ const RenderComponent = ({ component }: RenderComponentProps) => {
       return <React.Fragment />;
   }
 };
-
-const DynamicApp = () => {
-  const [app, setApp] = useState(_app);
-  const location = useLocation();
-  if (appState === undefined) appState = new AppState(app, setApp, location);
-  appState.setState(app, setApp, location);
-  return <RenderComponent component={app} />;
+interface DynamicAppProps {
+  appState: AppState;
+}
+const DynamicApp = ({ appState }: DynamicAppProps) => {
+  return <RenderComponent component={appState.getApp()} appState={appState} />;
 };
 
 export default DynamicApp;
 ```
 
 ```typescript
-// services/objectService.ts
+// services/webServices.ts
 import axios from "axios";
+import { Message } from "../types/types";
 
 const baseUrl = "http://localhost:3001/api";
 
-// Helper function to send requests to the /object endpoint
-const sendObjectRequest = async (
+// Helper function to send requests to the /webService endpoint
+const sendWebServiceRequest = async (
   pluginType: string,
   action: string,
-  objectName: string,
-  data = {}
+  params: any
 ) => {
-  const response = await axios.post(`${baseUrl}/objects`, {
+  const response = await axios.post(`${baseUrl}/webService`, {
     pluginType,
     action,
-    params: { type: objectName },
-    body: data,
+    params,
   });
   return response.data;
 };
 
+// Function to interact with the OpenAI plugin
+const chatWithOpenAI = async (messages: Message[]) => {
+  return sendWebServiceRequest("openai", "chat", { messages });
+};
+
 // Fetches all instances of a specified object type from the server.
-const getAllObjects = async (objectName: string) => {
-  return sendObjectRequest("mock", "getAllObjects", objectName);
+const getAllObjects = async (objectType: string) => {
+  return sendWebServiceRequest("mock", "getAllObjects", { type: objectType });
 };
 
 // Creates a new instance of a specified object type on the server.
-const createObject = async (objectName: string, newObject: any) => {
-  return sendObjectRequest("mock", "createObject", objectName, newObject);
+const createObject = async (objectType: string, newObject: any) => {
+  return sendWebServiceRequest("mock", "createObject", {
+    type: objectType,
+    data: newObject,
+  });
 };
 
 // Updates an existing instance of a specified object type on the server.
 const updateObject = async (
-  objectName: string,
+  objectType: string,
   id: string | number,
   updatedObject: any
 ) => {
-  return sendObjectRequest("mock", "updateObject", objectName, {
-    ...updatedObject,
-    id,
+  return sendWebServiceRequest("mock", "updateObject", {
+    type: objectType,
+    data: { ...updatedObject, id },
   });
 };
 
 // Deletes an instance of a specified object type from the server.
-const deleteObject = async (objectName: string, id: string | number) => {
-  return sendObjectRequest("mock", "deleteObject", objectName, { id });
+const deleteObject = async (objectType: string, id: string | number) => {
+  return sendWebServiceRequest("mock", "deleteObject", {
+    type: objectType,
+    data: { id },
+  });
 };
 
 export default {
@@ -477,6 +518,7 @@ export default {
   createObject,
   updateObject,
   deleteObject,
+  chatWithOpenAI,
 };
 ```
 
@@ -484,10 +526,11 @@ export default {
 // appFunctions.ts
 import dayjs from "dayjs";
 
-import objectService from "../services/objectService";
+import webService from "../services/webServices";
 import AppState from "../utils/AppState";
 import {
   Component,
+  Message,
   onFormChange,
   onFormFinish,
   onInit,
@@ -495,6 +538,47 @@ import {
   onSearch,
 } from "../types/types";
 import { FormInstance } from "rc-field-form";
+
+export const sendMessage: onSearch = async (
+  message: string,
+  appState: AppState,
+  component: Component
+) => {
+  // Retrieve the current message list
+  const messageList = appState.getComponent("messageList");
+  let newDataSource: Message[] = [];
+
+  if (messageList) {
+    // Append the new user message to the existing dataSource
+    newDataSource = [
+      ...messageList.properties.dataSource,
+      { role: "user", content: message },
+    ];
+
+    // Update message list with the new message
+    appState.changeComponent("messageList", { dataSource: newDataSource });
+  }
+
+  // Set loading indicator
+  appState.changeComponent("messageInput", { loading: true, value: "" });
+
+  try {
+    // Send the updated dataSource (including the new user message) to the chatbot service
+    const chatbotResponse = await webService.chatWithOpenAI(newDataSource);
+
+    // Update message list with the response from the chatbot
+    appState.changeComponent("messageList", { dataSource: chatbotResponse });
+  } catch (error) {
+    console.error("Error in sending message: " + error.message);
+    // Handle error (e.g., display error message to user)
+  } finally {
+    // Reset loading indicator
+    appState.changeComponent("messageInput", {
+      loading: false,
+      value: undefined,
+    });
+  }
+};
 
 export const updateEndDateRestriction: onFormFinish = (
   form: FormInstance,
@@ -540,10 +624,10 @@ export const submitObject: onFormFinish = async (
     // Check if formData has an id
     if (values.id) {
       // Update the existing project
-      await objectService.updateObject(component.objectType, values.id, values);
+      await webService.updateObject(component.objectType, values.id, values);
     } else {
       // Create a new project
-      await objectService.createObject(component.objectType, values);
+      await webService.createObject(component.objectType, values);
     }
 
     // Reload the project data to reflect changes
@@ -562,7 +646,7 @@ export const loadObjectData: onInit = async (
 ) => {
   try {
     if (component.objectType === undefined) return;
-    const objects = await objectService.getAllObjects(component.objectType);
+    const objects = await webService.getAllObjects(component.objectType);
     appState.changeComponent(component.name, { dataSource: objects });
   } catch (error) {
     console.error("Error loading project data:", error);
@@ -674,7 +758,7 @@ export const rowClickFunctions: Record<string, onRowClick> = {
   populateObjectFormOnSelection,
 };
 
-export const searchFunctions: Record<string, onSearch> = {};
+export const searchFunctions: Record<string, onSearch> = { sendMessage };
 ```
 
 ```typescript
@@ -724,7 +808,7 @@ const DynamicForm = ({ component, appState }: DynamicFormProps) => {
     })();
 
     return (
-      <Form.Item {...item} key={item.name}>
+      <Form.Item {...item.formItemProps} key={item.name}>
         {formInput}
       </Form.Item>
     );
@@ -817,57 +901,75 @@ const chatbotApp: App = {
       },
       children: [
         {
-          type: "Card",
-          name: "chatCard",
+          type: "Tabs",
+          name: "mainTabs",
           properties: {
-            title: "Chat with Our Bot",
+            defaultActiveKey: "1",
           },
-          children: [
+          items: [
             {
-              type: "List",
-              name: "messageList",
+              type: "TabPane",
+              name: "chatTab",
               properties: {
-                itemLayout: "vertical",
-                dataSource: [
-                  {
-                    role: "system",
-                    content: "You are...",
-                    editable: false,
-                  },
-                  {
-                    role: "user",
-                    content: "Kris: Okay",
-                    editable: true,
-                  },
-                  {
-                    role: "assistant",
-                    content: "Go",
-                    editable: false,
-                  },
-                  {
-                    role: "function",
-                    content: "function_response",
-                    name: "awesomeFunction",
-                    args: { name: "arg_name", value: "arg_value" },
-                    editable: true,
-                  },
-                ],
-                renderItem: {
-                  type: "CustomView",
-                  name: "messageItemView",
+                label: "Chat",
+                key: "1",
+              },
+              children: [
+                {
+                  type: "List",
+                  name: "messageList",
                   properties: {
-                    viewName: "MessageItemView",
+                    itemLayout: "vertical",
+                    dataSource: [
+                      {
+                        role: "system",
+                        content: "You are a helpful assistant.",
+                      },
+                    ],
+                    renderItem: {
+                      type: "CustomView",
+                      name: "messageItemView",
+                      properties: {
+                        viewName: "MessageItemView",
+                      },
+                    },
                   },
                 },
-              },
+                {
+                  type: "Search",
+                  name: "messageInput",
+                  onSearch: "sendMessage",
+                  properties: {
+                    placeholder: "Send message to chatbot",
+                  },
+                },
+              ],
             },
             {
-              type: "Search",
-              name: "messageInput",
+              type: "TabPane",
+              name: "fileSelectionTab",
               properties: {
-                placeholder: "Send message to chatbot",
-                onSearch: "onSendMessage",
+                label: "File Selection",
+                key: "2",
               },
+              children: [
+                {
+                  type: "Table",
+                  name: "fileSelectionTable",
+                  properties: {
+                    rowSelection: {
+                      type: "checkbox",
+                      onChange: "handleFileSelection",
+                    },
+                    columns: [
+                      // Define your columns here, e.g., file name, size, etc.
+                    ],
+                    dataSource: [
+                      // This should be dynamically populated with file data
+                    ],
+                  },
+                },
+              ],
             },
           ],
         },
@@ -882,7 +984,7 @@ const chatbotApp: App = {
     },
   ],
   functions: {
-    onSendMessage: {
+    sendMessage: {
       description:
         "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response.",
     },
@@ -941,8 +1043,14 @@ const chatbotApp: App = {
           },
         },
         {
-          type: "Text",
+          type: "PreformattedText",
           name: "messageContent",
+          properties: {
+            style: {
+              whiteSpace: "pre-wrap", // Wraps the text
+              wordWrap: "break-word", // This ensures that the text breaks to prevent overflow
+            },
+          },
         },
       ],
     },
@@ -953,7 +1061,7 @@ export default chatbotApp;
 ```
 
 ```javascript
-// webService.js
+// routes/webService.js
 const express = require("express");
 const router = express.Router();
 
@@ -961,17 +1069,19 @@ const router = express.Router();
 const MockDatabasePlugin = require("../plugins/mockDatabasePlugin");
 const SQLDatabasePlugin = require("../plugins/sqlDatabasePlugin");
 const OpenAIPlugin = require("../plugins/openAiPlugin");
+const FileSystemPlugin = require("../plugins/fsPlugin");
 
 // Initialize plugins
 const plugins = {
   mock: new MockDatabasePlugin(),
   sql: new SQLDatabasePlugin(),
   openai: new OpenAIPlugin(),
+  fs: new FileSystemPlugin("../"),
 };
 
 // Single /webService endpoint
 router.post("/webService", (req, res) => {
-  const { pluginType, action } = req.body;
+  const { pluginType, action, params } = req.body;
   console.log("pluginType", pluginType, "action", action);
   // Select the appropriate plugin
   const plugin = plugins[pluginType];
@@ -983,14 +1093,16 @@ router.post("/webService", (req, res) => {
   try {
     if (typeof plugin[action] === "function") {
       // Call the action method with request and response webService
-      plugin[action](req, res);
+      res.json(plugin[action](params));
     } else {
       res.status(400).json({ message: "Invalid action" });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.status ?? 500).json({ message: error.message });
   }
 });
+
+module.exports = router;
 ```
 
 ```javascript
@@ -1004,24 +1116,24 @@ class OpenAIPlugin {
   }
 
   async chat(req, res) {
-    const { messages } = req.body;
-    if (!prompt) {
-      return res.status(400).json({ message: "Prompt is required" });
+    const { messages } = req.body.data;
+    if (!messages) {
+      throw new Error("Messages is required", { status: 400 });
     }
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: "gpt-4-1106-preview",
+        model: "gpt-4",
         messages,
       });
 
       messages.push({
         role: "assistant",
-        content: completion.choices[0].message,
+        content: completion.choices[0].message.content,
       });
-      res.json(messages);
+      return messages;
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      throw new Error(error.message, { status: 500, cause: error });
     }
   }
 }
@@ -1043,23 +1155,19 @@ class MockDatabasePlugin {
     return JSON.parse(jsonData);
   }
 
-  writeData(data) {
+  writeData({ data }) {
     fs.writeFileSync(this.dataPath, JSON.stringify(data, null, 4));
   }
 
-  getAllObjects(req, res) {
-    const type = req.body.params.type;
+  getAllObjects({ type }) {
     console.log("getAllObjects", type);
 
     let data = this.readData();
     if (type) data = data[type] ?? [];
-    res.json(data);
+    return data;
   }
 
-  createObject(req, res) {
-    const type = req.params.type;
-    const newObject = req.body; // Assuming the new object data is sent in the request body
-
+  createObject({ type, newObject }) {
     // Read existing data
     const data = this.readData();
     if (!data[type]) data[type] = [];
@@ -1077,18 +1185,16 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the new object
-    res.json(newObject);
+    return newObject;
   }
 
-  updateObject(req, res) {
-    const type = req.params.type;
-    const objectId = parseInt(req.params.id);
-    const updatedObject = req.body; // Assuming the updated object data is sent in the request body
+  updateObject({ type, id, updatedObject }) {
+    const objectId = parseInt(id);
 
     // Read existing data
     let data = this.readData();
     if (!data[type]) {
-      return res.status(404).json({ message: "Type not found" });
+      throw new Error("Type not found", { status: 404 });
     }
 
     // Find the object
@@ -1096,7 +1202,7 @@ class MockDatabasePlugin {
       (object) => object.id === objectId
     );
     if (objectIndex === -1) {
-      return res.status(404).json({ message: "Object not found" });
+      throw new Error("Object not found", { status: 404 });
     }
 
     // Update the object
@@ -1106,17 +1212,16 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the updated object
-    res.json(data[type][objectIndex]);
+    return data[type][objectIndex];
   }
 
-  deleteObject(req, res) {
-    const type = req.params.type;
-    const objectId = parseInt(req.params.id);
+  deleteObject({ type, id }) {
+    const objectId = parseInt(id);
 
     // Read existing data
     let data = this.readData();
     if (!data[type]) {
-      return res.status(404).json({ message: "Type not found" });
+      throw new Error("Type not found", { status: 404 });
     }
 
     // Find the object
@@ -1124,7 +1229,7 @@ class MockDatabasePlugin {
       (object) => object.id === objectId
     );
     if (objectIndex === -1) {
-      return res.status(404).json({ message: "Object not found" });
+      throw new Error("Object not found", { status: 404 });
     }
 
     // Remove the object
@@ -1134,7 +1239,7 @@ class MockDatabasePlugin {
     this.writeData(data);
 
     // Respond with the deleted object
-    res.json(deletedObject);
+    return deletedObject;
   }
 }
 
@@ -1158,80 +1263,4 @@ const port = 3001;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-```
-
-```typescript
-// services/webService.ts
-import axios from "axios";
-import { Messages } from "../types/types";
-
-const baseUrl = "http://localhost:3001/api";
-
-// Helper function to send requests to the /webService endpoint
-const sendWebServiceRequest = async (
-  pluginType: string,
-  action: string,
-  params: any,
-  data = {}
-) => {
-  const response = await axios.post(`${baseUrl}/webService`, {
-    pluginType,
-    action,
-    params,
-    body: data,
-  });
-  return response.data;
-};
-
-// Function to interact with the OpenAI plugin
-const chatWithOpenAI = async (messages: Messages) => {
-  return sendWebServiceRequest("openai", "chat", { messages });
-};
-
-// Fetches all instances of a specified object type from the server.
-const getAllObjects = async (objectType: string) => {
-  return sendWebServiceRequest("mock", "getAllObjects", { type: objectType });
-};
-
-// Creates a new instance of a specified object type on the server.
-const createObject = async (objectType: string, newObject: any) => {
-  return sendWebServiceRequest(
-    "mock",
-    "createObject",
-    { type: objectType },
-    newObject
-  );
-};
-
-// Updates an existing instance of a specified object type on the server.
-const updateObject = async (
-  objectType: string,
-  id: string | number,
-  updatedObject: any
-) => {
-  return sendWebServiceRequest(
-    "mock",
-    "updateObject",
-    { type: objectType },
-    { ...updatedObject, id }
-  );
-};
-
-// Deletes an instance of a specified object type from the server.
-const deleteObject = async (objectType: string, id: string | number) => {
-  return sendWebServiceRequest(
-    "mock",
-    "deleteObject",
-    { type: objectType },
-    { id }
-  );
-};
-
-export default {
-  getAllObjects,
-  createObject,
-  updateObject,
-  deleteObject,
-  chatWithOpenAI,
-};
 ```

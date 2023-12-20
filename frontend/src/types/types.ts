@@ -8,6 +8,14 @@ export interface Message {
   args?: any;
   functionName?: string;
 }
+export type RowOnSelect = (
+  record: any,
+  selected: any,
+  selectedRows: any[],
+  nativeEvent: any,
+  appState: AppState,
+  component: Component
+) => void;
 export type onSearch = (
   searchValue: string,
   appState: AppState,

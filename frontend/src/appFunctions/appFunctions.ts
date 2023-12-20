@@ -6,6 +6,7 @@ import AppState from "../utils/AppState";
 import {
   Component,
   Message,
+  RowOnSelect,
   onFormChange,
   onFormFinish,
   onInit,
@@ -13,6 +14,107 @@ import {
   onSearch,
 } from "../types/types";
 import { FormInstance } from "rc-field-form";
+
+type File = {
+  key: string;
+  name: string;
+  type: string;
+  path: string; // Full path including the file name
+};
+/**
+ * Flattens the folder structure to a list of files.
+ * @param {Array} folderStructure The folder structure as returned by the server.
+ * @param {string} basePath The base path to prepend to file names.
+ * @returns {Array} The flattened list of files.
+ */
+const flattenFolderStructure = (
+  folderStructure: any[],
+  basePath = ""
+): File[] => {
+  let files: File[] = [];
+  for (const item of folderStructure) {
+    if (item.type === "file") {
+      files.push({
+        key: basePath + item.name,
+        name: item.name,
+        path: basePath + item.name,
+        type: item.type,
+      });
+    } else if (item.type === "directory" && item.children) {
+      files = files.concat(
+        flattenFolderStructure(item.children, basePath + item.name + "/")
+      );
+    }
+  }
+  return files;
+};
+
+/**
+ * Initializes the fileSelectionTable component with file data.
+ */
+export const fileSelectionInit: onInit = async (
+  appState: AppState,
+  component: Component
+) => {
+  try {
+    console.log("Initializing file selection table.");
+    // Define the columns with search functionality
+    const fileTableColumns = [
+      {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+        filters: [
+          {
+            text: "src",
+            value: "src",
+          },
+          {
+            text: ".ts",
+            value: ".ts",
+          },
+          {
+            text: ".js",
+            value: ".js",
+          },
+        ],
+        filterMode: "tree",
+        filterSearch: true,
+        onFilter: (value: string, record: File) => record.name.includes(value),
+        // filterSearch: true, // Enables search on this column
+        sorter: true, // Enables sorting on this column
+      },
+      {
+        title: "Path",
+        dataIndex: "path",
+        key: "path",
+        // Additional column properties
+      },
+      {
+        title: "Type",
+        dataIndex: "type",
+        key: "type",
+        // Other column properties
+      },
+      // Add more columns as needed
+    ];
+
+    // Replace 'folderPath' with the actual path you want to fetch
+    const folderStructure = await webService.getFolderStructure("folderPath");
+
+    // Flatten the folder structure to get a list of files
+    const files = flattenFolderStructure(folderStructure);
+
+    // Update the fileSelectionTable component's dataSource with the files
+    appState.changeComponent("fileSelectionTable", {
+      dataSource: files,
+      columns: fileTableColumns,
+    });
+  } catch (error) {
+    console.error("Error initializing file selection table:", error);
+    // Handle errors, for example, show an error notification
+  }
+};
 
 export const sendMessage: onSearch = async (
   message: string,
@@ -227,6 +329,7 @@ export const formChangeFunctions: Record<string, onFormChange> = {
 export const initFunctions: Record<string, onInit> = {
   onInitMessageListItem,
   loadObjectData,
+  fileSelectionInit,
 };
 
 export const rowClickFunctions: Record<string, onRowClick> = {
@@ -234,3 +337,4 @@ export const rowClickFunctions: Record<string, onRowClick> = {
 };
 
 export const searchFunctions: Record<string, onSearch> = { sendMessage };
+export const rowSelectionSelectFunctions: Record<string, RowOnSelect> = {};

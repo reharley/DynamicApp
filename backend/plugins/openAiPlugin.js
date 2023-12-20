@@ -7,10 +7,9 @@ class OpenAIPlugin {
     this.openai = new OpenAI();
   }
 
-  async chat(req, res) {
-    const { messages } = req.body.data;
+  async chat({ messages }) {
     if (!messages) {
-      return res.status(400).json({ message: "Messages is required" });
+      throw new Error("Messages is required", { status: 400 });
     }
 
     try {
@@ -23,9 +22,9 @@ class OpenAIPlugin {
         role: "assistant",
         content: completion.choices[0].message.content,
       });
-      res.json(messages);
+      return messages;
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      throw new Error(error.message, { status: 500, cause: error });
     }
   }
 }

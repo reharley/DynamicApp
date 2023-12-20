@@ -30,7 +30,17 @@ router.post("/webService", (req, res) => {
   try {
     if (typeof plugin[action] === "function") {
       // Call the action method with request and response webService
-      res.json(plugin[action](params));
+      const result = plugin[action](params);
+      // If the action returns a promise, wait for it to resolve
+      if (result instanceof Promise) {
+        result
+          .then((data) => res.json(data))
+          .catch((error) =>
+            res.status(error.status ?? 500).json({ message: error.message })
+          );
+      } else {
+        res.json(result);
+      }
     } else {
       res.status(400).json({ message: "Invalid action" });
     }

@@ -21,10 +21,10 @@ const App: React.FC = () => {
   appState2.setState(app2, setApp2, location);
   return (
     <>
-      <Space>
-        <DynamicApp appState={appState} />
-        <DynamicApp appState={appState2} />
-      </Space>
+      {/* <Space> */}
+      <DynamicApp appState={appState} />
+      {/* <DynamicApp appState={appState2} /> */}
+      {/* </Space> */}
     </>
   );
 };

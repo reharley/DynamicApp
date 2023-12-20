@@ -2,6 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 
+const skipFiles = ["node_modules", ".git"];
 class FileSystemPlugin {
   constructor(basePath) {
     this.basePath = basePath;
@@ -15,7 +16,11 @@ class FileSystemPlugin {
 
     const directoryContents = fs.readdirSync(fullPath, { withFileTypes: true });
     return directoryContents.map((dirent) => {
-      if (dirent.isDirectory()) {
+      if (
+        dirent.isDirectory() &&
+        !dirent.name.startsWith(".") &&
+        skipFiles.indexOf(dirent.name) === -1
+      ) {
         return {
           name: dirent.name,
           type: "directory",

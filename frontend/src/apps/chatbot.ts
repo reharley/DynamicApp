@@ -43,39 +43,88 @@ const chatbotApp: App = {
       },
       children: [
         {
-          type: "Card",
-          name: "chatCard",
+          type: "Tabs",
+          name: "mainTabs",
           properties: {
-            title: "Chat with Our Bot",
+            defaultActiveKey: "1",
           },
-          children: [
+          items: [
             {
-              type: "List",
-              name: "messageList",
+              type: "TabPane",
+              name: "chatTab",
               properties: {
-                itemLayout: "vertical",
-                dataSource: [
-                  {
-                    role: "system",
-                    content: "You are a helpful assistant.",
-                  },
-                ],
-                renderItem: {
-                  type: "CustomView",
-                  name: "messageItemView",
+                label: "Chat",
+                key: "1",
+              },
+              children: [
+                {
+                  type: "List",
+                  name: "messageList",
                   properties: {
-                    viewName: "MessageItemView",
+                    itemLayout: "vertical",
+                    dataSource: [
+                      {
+                        role: "system",
+                        content: "You are a helpful assistant.",
+                      },
+                    ],
+                    renderItem: {
+                      type: "CustomView",
+                      name: "messageItemView",
+                      properties: {
+                        viewName: "MessageItemView",
+                      },
+                    },
                   },
                 },
-              },
+                {
+                  type: "Search",
+                  name: "messageInput",
+                  onSearch: "sendMessage",
+                  properties: {
+                    placeholder: "Send message to chatbot",
+                  },
+                },
+              ],
             },
             {
-              type: "Search",
-              name: "messageInput",
-              onSearch: "sendMessage",
+              type: "TabPane",
+              name: "fileSelectionTab",
               properties: {
-                placeholder: "Send message to chatbot",
+                label: "File Selection",
+                key: "2",
               },
+              children: [
+                {
+                  type: "Table",
+                  name: "fileSelectionTable",
+                  onInit: "fileSelectionInit",
+                  properties: {
+                    rowSelection: {
+                      type: "checkbox",
+                      onChange: "handleFileSelection",
+                    },
+                    columns: [
+                      {
+                        title: "Name", // Column header
+                        dataIndex: "name", // Field in the data source
+                        key: "name", // Unique key for the column
+                        onFilter: true, // Enables filtering on this column
+                        filterSearch: true, // Enables search on this column
+                        sorter: true, // Enables sorting on this column
+                      },
+                      {
+                        title: "Type",
+                        dataIndex: "type",
+                        key: "type",
+                      },
+                    ],
+                    dataSource: [
+                      // This should be dynamically populated with file data
+                    ],
+                  },
+                },
+              ],
             },
           ],
         },
@@ -90,6 +139,13 @@ const chatbotApp: App = {
     },
   ],
   functions: {
+    handleFileSelection: {
+      description: `The handleFileSelection function is responsible for managing the user's interaction with the fileSelectionTable. It triggers when the user selects or deselects files within the table. The function captures the selected files' details (such as name, path, and type) and can perform various actions based on this selection, like storing the selected files' information for later use, enabling or disabling UI elements (e.g., download or delete buttons), or initiating further processes like file analysis or processing. This function is vital for ensuring a responsive and interactive user experience in scenarios where file selection and subsequent actions on these files are required.`,
+    },
+    fileSelectionInit: {
+      description:
+        "The fileSelectionInit function is designed  populate the fileSelectionTable with files  a specified base directory upon initialization. It fetches a list of files and displays them in a flat list within the table, allowing users to select multiple files. This function ensures that the file selection process is seamless and intuitive, providing users with immediate access to the files they need directly from the base directory.",
+    },
     sendMessage: {
       description:
         "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response.",
