@@ -1,3 +1,3 @@
-Provide a markdown codeblock of the Function Overview, Test Cases, and Mock Setup description for onInitMessageListItem.
+Provide a markdown codeblock of the Function Overview, Test Cases, and Mock Setup description for sendMessage.
 
-Fully implement number onInitMessageListItem. in its own .test.js file
+Fully implement number sendMessage. in its own .test.js file

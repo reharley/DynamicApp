@@ -102,7 +102,7 @@ const chatbotApp: App = {
                   properties: {
                     rowSelection: {
                       type: "checkbox",
-                      onChange: "handleFileSelection",
+                      // onChange: "handleFileSelection",
                     },
                     columns: [
                       {
@@ -147,8 +147,7 @@ const chatbotApp: App = {
         "The fileSelectionInit function is designed  populate the fileSelectionTable with files  a specified base directory upon initialization. It fetches a list of files and displays them in a flat list within the table, allowing users to select multiple files. This function ensures that the file selection process is seamless and intuitive, providing users with immediate access to the files they need directly from the base directory.",
     },
     sendMessage: {
-      description:
-        "This function is triggered when the 'Send' button is clicked. It sends the user's message to the chatbot service and retrieves the response. The function then updates the 'messageList' with both the user's message and the chatbot's response.",
+      description: `This function is triggered when the 'Send' button is clicked. It not only sends the user's message to the chatbot service but also handles the retrieval of file contents from any files selected in the fileSelectionTable. Once the file contents are received, they are appended to the user's message. The function then updates the 'messageList' with the combined user's message and attached file contents, along with the chatbot's response, ensuring a seamless integration of text and file-based communication in the chat interface.`,
     },
     onInitMessageListItem: {
       description:

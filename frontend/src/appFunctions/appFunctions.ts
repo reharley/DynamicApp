@@ -6,21 +6,17 @@ import AppState from "../utils/AppState";
 import {
   Component,
   Message,
+  RowOnChange,
   RowOnSelect,
   onFormChange,
   onFormFinish,
   onInit,
   onRowClick,
+  File,
   onSearch,
 } from "../types/types";
 import { FormInstance } from "rc-field-form";
 
-type File = {
-  key: string;
-  name: string;
-  type: string;
-  path: string; // Full path including the file name
-};
 /**
  * Flattens the folder structure to a list of files.
  * @param {Array} folderStructure The folder structure as returned by the server.
@@ -116,31 +112,56 @@ export const fileSelectionInit: onInit = async (
   }
 };
 
+async function getFileContents(selectedFiles: File[]) {
+  // Extract the paths of the selected files
+  const filePaths = selectedFiles.map((file) => file.path);
+
+  // Fetch the contents of the selected files
+  const filesContent = await webService.getFilesContent(filePaths);
+
+  // Format each file's content in Markdown style
+  return filesContent
+    .map((file) => {
+      const simplifiedPath = file.path.split("/").slice(-2).join("/"); // Simplify the path
+      return `\`\`\`${file.type}\nPath: ${simplifiedPath}\nName: ${file.name}\n\n${file.content}\n\`\`\``;
+    })
+    .join("\n\n");
+}
+
 export const sendMessage: onSearch = async (
   message: string,
   appState: AppState,
   component: Component
 ) => {
-  // Retrieve the current message list
+  // Retrieve the current message list and update it immediately with the user's message
   const messageList = appState.getComponent("messageList");
-  let newDataSource: Message[] = [];
+  let newDataSource = messageList
+    ? [...messageList.properties.dataSource, { role: "user", content: message }]
+    : [{ role: "user", content: message }];
 
-  if (messageList) {
-    // Append the new user message to the existing dataSource
-    newDataSource = [
-      ...messageList.properties.dataSource,
-      { role: "user", content: message },
-    ];
-
-    // Update message list with the new message
-    appState.changeComponent("messageList", { dataSource: newDataSource });
-  }
-
-  // Set loading indicator
+  // Update the message list and set loading indicator for immediate feedback
+  appState.changeComponent("messageList", { dataSource: newDataSource });
   appState.changeComponent("messageInput", { loading: true, value: "" });
 
   try {
-    // Send the updated dataSource (including the new user message) to the chatbot service
+    // Retrieve selected files from fileSelectionTable
+    const fileSelectionTable = appState.getComponent("fileSelectionTable");
+    const selectedFiles = fileSelectionTable
+      ? fileSelectionTable.properties.rowSelection.selectedRows
+      : [];
+
+    // If there are selected files, get their contents and append to the message
+    if (selectedFiles.length > 0) {
+      const fileContents = await getFileContents(selectedFiles);
+      const lastMessageIndex = newDataSource.length - 1;
+      newDataSource[lastMessageIndex] = {
+        role: "user",
+        content: message + `\nAttached Files:\n${fileContents}`,
+      };
+      appState.changeComponent("messageList", { dataSource: newDataSource });
+    }
+
+    // Send the updated dataSource to the chatbot service
     const chatbotResponse = await webService.chatWithOpenAI(newDataSource);
 
     // Update message list with the response from the chatbot
@@ -282,6 +303,9 @@ export const onInitMessageListItem: onInit = (
     return;
   }
 
+  const fileSelectionTable = appState.getComponent("fileSelectionTable");
+  console.log("fileSelectionTable", fileSelectionTable);
+
   // Adjust component names based on dataIndex
   const adjustedName = (baseName: string) => `${baseName}_${dataIndex}`;
 
@@ -338,3 +362,4 @@ export const rowClickFunctions: Record<string, onRowClick> = {
 
 export const searchFunctions: Record<string, onSearch> = { sendMessage };
 export const rowSelectionSelectFunctions: Record<string, RowOnSelect> = {};
+export const rowSelectionChangeFunctions: Record<string, RowOnChange> = {};

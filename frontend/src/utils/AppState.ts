@@ -9,6 +9,7 @@ export default class AppState {
   private location: any;
   private setAppState: (app: App) => void;
   private customViewCache: { [key: string]: any };
+  private componentCache: { [key: string]: Component };
   getCustomView(name: string) {
     return this.app.customViews[name];
   }
@@ -22,10 +23,15 @@ export default class AppState {
   }
   constructor(app: App, setAppState: (app: App) => void, location: Location) {
     this.setState(app, setAppState, location);
-    this.customViewCache = {}; // New cache to store custom view instances
+    this.customViewCache = {};
+    this.componentCache = {};
   }
 
-  getComponent(name: string) {
+  getComponent(name: string): Component | null {
+    // Check if the component is already in the cache
+    if (this.componentCache[name]) {
+      return this.componentCache[name];
+    }
     // First, search in the main app structure
     let foundComponent = this._searchComponentByName(name, this.app);
 
@@ -40,6 +46,8 @@ export default class AppState {
       });
     }
 
+    // Cache the component for future use
+    if (foundComponent) this.componentCache[name] = foundComponent;
     return foundComponent;
   }
   _searchComponentByName(

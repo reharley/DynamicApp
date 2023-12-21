@@ -6,7 +6,11 @@ import webService from "../../services/webServices";
 import { App, Component } from "../../types/types";
 
 jest.mock("../../utils/AppState");
-jest.mock("../../services/webServices");
+jest.mock("../../services/webServices", () => ({
+  ...jest.requireActual("../../services/webServices"),
+  getFilesContent: jest.fn(),
+  chatWithOpenAI: jest.fn(),
+}));
 
 describe("sendMessage", () => {
   let appState: AppState;
@@ -18,8 +22,8 @@ describe("sendMessage", () => {
   beforeEach(() => {
     // Mock or create initial App state
     mockApp = {
-      /* ... */
-    } as App; // Populate with your App state structure
+      // Populate with your App state structure
+    } as App;
     mockSetAppState = jest.fn();
     mockLocation = {} as Location; // Mock Location object
 
@@ -30,6 +34,8 @@ describe("sendMessage", () => {
     appState.getComponent = jest.fn().mockImplementation((name: string) => {
       if (name === "messageList") {
         return { properties: { dataSource: [] } };
+      } else if (name === "fileSelectionTable") {
+        return { properties: { rowSelection: { selectedRows: [] } } }; // Mock for no selected files
       }
       return null;
     });
@@ -37,9 +43,10 @@ describe("sendMessage", () => {
   });
 
   it("should append user message and display chatbot response", async () => {
-    // Set up mock responses and behavior
+    // Mock chatWithOpenAI to return a user message followed by a chatbot response
     webService.chatWithOpenAI = jest.fn().mockResolvedValue([
-      // include mocked response
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi there! How can I help you?" },
     ]);
 
     // Call sendMessage
@@ -70,6 +77,71 @@ describe("sendMessage", () => {
       expect.stringContaining("Error in sending message:")
     );
     consoleSpy.mockRestore();
+  });
+
+  it("should handle loading state correctly", async () => {
+    // Set up mock responses and behavior
+    webService.chatWithOpenAI = jest.fn().mockResolvedValue([]);
+
+    // Call sendMessage
+    await sendMessage("Test message", appState, component);
+
+    // Assertions for loading state
+    expect(appState.changeComponent).toHaveBeenCalledWith("messageInput", {
+      loading: true,
+      value: "",
+    });
+    expect(appState.changeComponent).toHaveBeenCalledWith("messageInput", {
+      loading: false,
+      value: undefined,
+    });
+  });
+
+  // Test case for file attachment handling (you need to mock getFileContents function or similar logic)
+  it("should handle file attachments", async () => {
+    // Mock file selection
+    appState.getComponent = jest.fn().mockImplementation((name: string) => {
+      if (name === "fileSelectionTable") {
+        return { properties: { selectedRows: [{ path: "path/to/file.txt" }] } };
+      }
+      return null;
+    });
+
+    // Mock getFileContents behavior
+    const mockFileContents = ["Contents of file1.txt", "Contents of file2.txt"];
+    webService.getFilesContent = jest.fn().mockResolvedValue(
+      mockFileContents.map((content, index) => {
+        return { path: `path/to/file${index + 1}.txt`, content };
+      })
+    );
+
+    // Set up mock responses and behavior for chatWithOpenAI
+    webService.chatWithOpenAI = jest.fn().mockResolvedValue([
+      { role: "user", content: "Test message with files" },
+      // Add other messages or bot responses if needed
+    ]);
+
+    // Call sendMessage
+    await sendMessage("Test message", appState, component);
+
+    // Assertions for file attachment handling
+    // Assertions depend on how you implement file contents retrieval
+  });
+
+  // Test case for no file selection
+  it("should send message correctly when no files are selected", async () => {
+    // Set up mock responses and behavior
+    webService.chatWithOpenAI = jest.fn().mockResolvedValue([]);
+
+    // Call sendMessage
+    await sendMessage("Test message without files", appState, component);
+
+    // Assertions for message sending without file attachments
+    expect(webService.chatWithOpenAI).toHaveBeenCalledWith(expect.any(Array));
+    expect(appState.changeComponent).toHaveBeenCalledWith(
+      "messageList",
+      expect.any(Object)
+    );
   });
 
   // Additional test cases...

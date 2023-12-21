@@ -1,6 +1,6 @@
 // services/webServices.ts
 import axios from "axios";
-import { Message } from "../types/types";
+import { Message, File } from "../types/types";
 
 const baseUrl = "http://localhost:3001/api";
 
@@ -16,6 +16,20 @@ const sendWebServiceRequest = async (
     params,
   });
   return response.data;
+};
+
+const getFilesContent = async (filePaths: string[]): Promise<File[]> => {
+  try {
+    const response = await axios.post(`${baseUrl}/webService`, {
+      pluginType: "fs",
+      action: "getFilesContent",
+      params: { filePaths },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching file contents:", error);
+    throw error;
+  }
 };
 
 // Function to interact with the OpenAI plugin
@@ -68,4 +82,5 @@ export default {
   deleteObject,
   chatWithOpenAI,
   getFolderStructure,
+  getFilesContent,
 };

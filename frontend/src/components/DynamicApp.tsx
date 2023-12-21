@@ -113,7 +113,7 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
       };
       const rowSelection = {
         ...properties.rowSelection,
-        onChange: (
+        onSelect: (
           record: any,
           selected: any,
           selectedRows: any[],
@@ -121,9 +121,9 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
         ) => {
           if (
             component.properties.rowSelection &&
-            component.properties.rowSelection.onChange
+            component.properties.rowSelection.onSelect
           ) {
-            const functionName = component.properties.rowSelection.onChange;
+            const functionName = component.properties.rowSelection.onSelect;
             if (appFunctions.rowSelectionSelectFunctions[functionName]) {
               appFunctions.rowSelectionSelectFunctions[functionName](
                 record,
@@ -134,6 +134,38 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
                 component
               );
             }
+          }
+        },
+        onChange: (selectedRowKeys: any[], selectedRows: any[], info: any) => {
+          if (!component.properties) component.properties = {};
+          if (!component.properties.rowSelection)
+            component.properties.rowSelection = {};
+
+          // Update component properties
+          component.properties.rowSelection = {
+            ...component.properties.rowSelection,
+            selectedRowKeys,
+            selectedRows,
+            info,
+          };
+
+          if (
+            component.properties.rowSelection &&
+            component.properties.rowSelection.onChange
+          ) {
+            const functionName = component.properties.rowSelection.onChange;
+            if (appFunctions.rowSelectionChangeFunctions[functionName]) {
+              appFunctions.rowSelectionChangeFunctions[functionName](
+                selectedRowKeys,
+                selectedRows,
+                info,
+                appState,
+                component
+              );
+            }
+          } else {
+            // component was updated above in the beginning of this function
+            appState.changeComponent(component.name, {});
           }
         },
       };

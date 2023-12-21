@@ -8,7 +8,27 @@ class FileSystemPlugin {
     this.basePath = basePath;
   }
 
-  readDirectory(dirPath) {
+  getFilesContent({ filePaths }) {
+    try {
+      return filePaths.map((filePath) => {
+        const fullPath = path.resolve(this.basePath, filePath);
+        const content = fs.readFileSync(fullPath, "utf-8");
+        const fileType = path.extname(filePath).slice(1); // Get file extension as type
+        const fileName = path.basename(filePath);
+
+        return {
+          path: filePath,
+          name: fileName,
+          type: fileType,
+          content: content,
+        };
+      });
+    } catch (error) {
+      throw new Error("Error reading file contents: " + error.message);
+    }
+  }
+
+  readDirectory({ dirPath }) {
     const fullPath = path.join(this.basePath, dirPath);
     if (!fs.existsSync(fullPath)) {
       throw new Error(`Directory not found: ${fullPath}`);
@@ -32,10 +52,10 @@ class FileSystemPlugin {
     });
   }
 
-  getFolderStructure(folderPath = "") {
+  getFolderStructure({ folderPath = "" }) {
     return this.readDirectory(folderPath);
   }
-  createDirectory(dirPath) {
+  createDirectory({ dirPath }) {
     const fullPath = path.join(this.basePath, dirPath);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
@@ -43,21 +63,21 @@ class FileSystemPlugin {
       throw new Error(`Directory already exists: ${fullPath}`);
     }
   }
-  createFile(filePath, content) {
+  createFile({ filePath, content }) {
     const fullPath = path.join(this.basePath, filePath);
     if (fs.existsSync(fullPath)) {
       throw new Error(`File already exists: ${fullPath}`);
     }
     fs.writeFileSync(fullPath, content);
   }
-  readFile(filePath) {
+  readFile({ filePath }) {
     const fullPath = path.join(this.basePath, filePath);
     if (!fs.existsSync(fullPath)) {
       throw new Error(`File not found: ${fullPath}`);
     }
     return fs.readFileSync(fullPath, "utf8");
   }
-  updateFile(filePath, content, overwrite = false) {
+  updateFile({ filePath, content, overwrite = false }) {
     const fullPath = path.join(this.basePath, filePath);
     if (!fs.existsSync(fullPath)) {
       throw new Error(`File not found: ${fullPath}`);
@@ -68,7 +88,7 @@ class FileSystemPlugin {
       fs.appendFileSync(fullPath, content);
     }
   }
-  deleteDirectory(dirPath, recursive = true) {
+  deleteDirectory({ dirPath, recursive = true }) {
     const fullPath = path.join(this.basePath, dirPath);
     if (fs.existsSync(fullPath)) {
       fs.rmdirSync(fullPath, { recursive });
@@ -76,7 +96,7 @@ class FileSystemPlugin {
       throw new Error(`Directory not found: ${fullPath}`);
     }
   }
-  deleteFile(filePath) {
+  deleteFile({ filePath }) {
     const fullPath = path.join(this.basePath, filePath);
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);

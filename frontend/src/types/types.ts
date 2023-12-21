@@ -16,6 +16,13 @@ export type RowOnSelect = (
   appState: AppState,
   component: Component
 ) => void;
+export type RowOnChange = (
+  selectedRowKeys: any[],
+  selectedRows: any[],
+  info: any,
+  appState: AppState,
+  component: Component
+) => void;
 export type onSearch = (
   searchValue: string,
   appState: AppState,
@@ -67,3 +74,11 @@ export interface Component {
 export interface FunctionDescription {
   description: string;
 }
+
+export type File = {
+  name: string;
+  key?: string;
+  type: string;
+  path: string; // Full path including the file name
+  content?: string;
+};
