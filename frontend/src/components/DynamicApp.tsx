@@ -22,6 +22,7 @@ import DynamicForm from "./DynamicForm";
 import AppState from "../utils/AppState";
 import * as appFunctions from "../appFunctions";
 import { Component } from "../types/types";
+import Markdown from "./Markdown";
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
@@ -34,7 +35,8 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
   const componentRef = useRef(null);
   if (!appState || !component) return <React.Fragment />;
   component.current = componentRef.current;
-  if (componentRef.current === null && component.onInit) {
+  if (component.initialized !== true && component.onInit) {
+    component.initialized = true;
     if (appFunctions.initFunctions[component.onInit] === undefined)
       console.log(`Function ${component.onInit} not found`);
     else appFunctions.initFunctions[component.onInit](appState, component);
@@ -211,7 +213,7 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
       return <Text {...properties}>{properties.text}</Text>;
 
     case "PreformattedText":
-      return <pre {...properties}>{properties.text}</pre>;
+      return <Markdown {...properties} content={properties.text} />;
     case "string":
       return component.properties.text;
 

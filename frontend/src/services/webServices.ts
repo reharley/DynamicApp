@@ -43,7 +43,7 @@ const getAllObjects = async (objectType: string) => {
 };
 
 // Function to get the folder structure from the server
-const getFolderStructure = async (folderPath?: string) => {
+const getFolderStructure = async (dirPath?: string) => {
   return sendWebServiceRequest("fs", "getFolderStructure", undefined);
 };
 

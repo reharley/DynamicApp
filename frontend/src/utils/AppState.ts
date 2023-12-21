@@ -27,7 +27,7 @@ export default class AppState {
     this.componentCache = {};
   }
 
-  getComponent(name: string): Component | null {
+  getComponent(name: string): Component | undefined {
     // Check if the component is already in the cache
     if (this.componentCache[name]) {
       return this.componentCache[name];
@@ -53,8 +53,8 @@ export default class AppState {
   _searchComponentByName(
     name: string,
     currentComponent: any
-  ): Component | null {
-    if (!currentComponent || typeof currentComponent !== "object") return null;
+  ): Component | undefined {
+    if (!currentComponent || typeof currentComponent !== "object") return;
 
     // Base case: if the component's name matches, return the component
     if (currentComponent.name === name) {
@@ -82,8 +82,7 @@ export default class AppState {
         }
       }
     }
-
-    return null;
+    return;
   }
   /**
    * Updates a component's properties by name.

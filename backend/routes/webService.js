@@ -18,7 +18,7 @@ const plugins = {
 
 // Single /webService endpoint
 router.post("/webService", (req, res) => {
-  const { pluginType, action, params } = req.body;
+  const { pluginType, action, params = {} } = req.body;
   console.log("pluginType", pluginType, "action", action);
   // Select the appropriate plugin
   const plugin = plugins[pluginType];

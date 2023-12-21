@@ -146,9 +146,8 @@ export const sendMessage: onSearch = async (
   try {
     // Retrieve selected files from fileSelectionTable
     const fileSelectionTable = appState.getComponent("fileSelectionTable");
-    const selectedFiles = fileSelectionTable
-      ? fileSelectionTable.properties.rowSelection.selectedRows
-      : [];
+    const selectedFiles =
+      fileSelectionTable?.properties?.rowSelection?.selectedRows ?? [];
 
     // If there are selected files, get their contents and append to the message
     if (selectedFiles.length > 0) {

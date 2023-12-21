@@ -59,6 +59,7 @@ export interface App {
 export interface Component {
   type: string;
   name: string;
+  initialized?: boolean;
   current?: null | HTMLElement | FormInstance;
   objectType?: string;
   objectFormName?: string;

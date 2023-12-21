@@ -44,7 +44,9 @@ class FileSystemPlugin {
         return {
           name: dirent.name,
           type: "directory",
-          children: this.readDirectory(path.join(dirPath, dirent.name)),
+          children: this.readDirectory({
+            dirPath: path.join(dirPath, dirent.name),
+          }),
         };
       } else {
         return { name: dirent.name, type: "file" };
@@ -52,8 +54,8 @@ class FileSystemPlugin {
     });
   }
 
-  getFolderStructure({ folderPath = "" }) {
-    return this.readDirectory(folderPath);
+  getFolderStructure({ dirPath = "" }) {
+    return this.readDirectory({ dirPath });
   }
   createDirectory({ dirPath }) {
     const fullPath = path.join(this.basePath, dirPath);
