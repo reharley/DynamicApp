@@ -1,20 +1,7 @@
 // routes/webService.js
 const express = require("express");
 const router = express.Router();
-
-// Assume MockDatabasePlugin and SQLDatabasePlugin are implemented plugins
-const MockDatabasePlugin = require("../plugins/mockDatabasePlugin");
-const SQLDatabasePlugin = require("../plugins/sqlDatabasePlugin");
-const OpenAIPlugin = require("../plugins/openAiPlugin");
-const FileSystemPlugin = require("../plugins/fsPlugin");
-
-// Initialize plugins
-const plugins = {
-  mock: new MockDatabasePlugin(),
-  sql: new SQLDatabasePlugin(),
-  openai: new OpenAIPlugin(),
-  fs: new FileSystemPlugin("../"),
-};
+const plugins = require("../plugins/index");
 
 // Single /webService endpoint
 router.post("/webService", (req, res) => {

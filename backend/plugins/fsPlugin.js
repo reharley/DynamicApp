@@ -106,5 +106,58 @@ class FileSystemPlugin {
       throw new Error(`File not found: ${fullPath}`);
     }
   }
+  insertString({ filePath, content, startPattern, endPattern }) {
+    const fullPath = path.join(this.basePath, filePath);
+
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`File not found: ${fullPath}`);
+    }
+
+    let fileContent = fs.readFileSync(fullPath, "utf8");
+
+    // Create regex objects from the patterns
+    const startRegex = new RegExp(startPattern, "g");
+    const endRegex = new RegExp(endPattern, "g");
+
+    // Find the indices of the start and end patterns
+    const startMatch = startRegex.exec(fileContent);
+    const endMatch = endRegex.exec(fileContent);
+
+    if (!startMatch || !endMatch) {
+      throw new Error("Pattern not found");
+    }
+
+    const startIndex = startMatch.index + startMatch[0].length;
+    const endIndex = endMatch.index;
+
+    if (startIndex >= endIndex) {
+      throw new Error("End pattern comes before start pattern");
+    }
+
+    // Split the content at the start and end indices and insert the new content
+    const beforeStart = fileContent.substring(0, startIndex);
+    const afterEnd = fileContent.substring(endIndex);
+    const newContent = beforeStart + content + afterEnd;
+
+    fs.writeFileSync(fullPath, newContent);
+  }
+  replaceString({ filePath, replacementContent, pattern }) {
+    const fullPath = path.join(this.basePath, filePath);
+
+    if (!fs.existsSync(fullPath)) {
+      return `File not found: ${fullPath}`;
+    }
+
+    let fileContent = fs.readFileSync(fullPath, "utf8");
+
+    // Create a regex object from the pattern
+    const regex = new RegExp(pattern, "g");
+
+    // Replace the content matched by the regex pattern
+    const newContent = fileContent.replace(regex, replacementContent);
+
+    fs.writeFileSync(fullPath, newContent);
+    return { success: true };
+  }
 }
 module.exports = FileSystemPlugin;

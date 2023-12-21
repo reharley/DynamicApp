@@ -1,5 +1,15 @@
 // openAiPlugin.js
 const OpenAI = require("openai");
+const MockDatabasePlugin = require("./mockDatabasePlugin");
+const FileSystemPlugin = require("./fsPlugin");
+const GitPlugin = require("./gitPlugin");
+const remoteRepoUrl = "../../Dynamic_App";
+// Initialize plugins
+const plugins = {
+  mock: new MockDatabasePlugin(),
+  fs: new FileSystemPlugin(remoteRepoUrl),
+  git: new GitPlugin(remoteRepoUrl),
+};
 
 class OpenAIPlugin {
   constructor() {
@@ -13,11 +23,77 @@ class OpenAIPlugin {
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        // model: "gpt-4",
-        model: "gpt-3.5-turbo",
+      let completion = await this.openai.chat.completions.create({
+        model: "gpt-4",
+        // model: "gpt-3.5-turbo",
         messages,
+        functions: [
+          {
+            name: "fs-replaceString",
+            description:
+              "Replaces a string in a file identified by a regular expression",
+            parameters: {
+              type: "object",
+              properties: {
+                filePath: {
+                  type: "string",
+                  description: "The relative path of the file",
+                },
+                replacementContent: {
+                  type: "string",
+                  description: "The string to replace the matched content",
+                },
+                pattern: {
+                  type: "string",
+                  description:
+                    "The regular expression that identifies the snippet to be replaced",
+                },
+              },
+              required: ["filePath", "replacementContent", "pattern"],
+            },
+          },
+        ],
       });
+      let maxIterations = 3;
+      while (completion.choices[0].message.function_call && maxIterations > 0) {
+        maxIterations--;
+        console.log(
+          "function call",
+          completion.choices[0].message.function_call
+        );
+        let functionName = completion.choices[0].message.function_call.name;
+        let args = completion.choices[0].message.function_call.arguments;
+
+        // This assumes you have an object where the keys are pluginNames and the values are plugin instances
+        let [pluginName, pluginActionName] = functionName.split("-");
+        let plugin = plugins[pluginName];
+        let functionResStr;
+        if (plugin && typeof plugin[pluginActionName] === "function") {
+          try {
+            let functionRes = plugin[pluginActionName](JSON.parse(args));
+            if (functionRes instanceof Promise)
+              functionResStr = JSON.stringify(await functionRes);
+            else functionResStr = JSON.stringify(functionRes);
+          } catch (e) {
+            console.error(e);
+            functionResStr = JSON.stringify(e);
+          }
+
+          let newMessage = {
+            role: "function",
+            name: "get_current_weather",
+            content: functionResStr,
+          };
+
+          messages.push(newMessage);
+
+          // Second call
+          completion = await this.openai.chat.completions.create({
+            model: "gpt-4",
+            messages,
+          });
+        }
+      }
 
       messages.push({
         role: "assistant",

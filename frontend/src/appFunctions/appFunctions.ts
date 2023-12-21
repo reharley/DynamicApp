@@ -84,6 +84,31 @@ export const fileSelectionInit: onInit = async (
         title: "Path",
         dataIndex: "path",
         key: "path",
+        filters: [
+          {
+            text: "src",
+            value: "src",
+          },
+          {
+            text: "backend",
+            value: "backend",
+          },
+          {
+            text: "frontend",
+            value: "frontend",
+          },
+          {
+            text: ".ts",
+            value: ".ts",
+          },
+          {
+            text: ".js",
+            value: ".js",
+          },
+        ],
+        filterMode: "tree",
+        filterSearch: true,
+        onFilter: (value: string, record: File) => record.name.includes(value),
         // Additional column properties
       },
       {
@@ -122,8 +147,7 @@ async function getFileContents(selectedFiles: File[]) {
   // Format each file's content in Markdown style
   return filesContent
     .map((file) => {
-      const simplifiedPath = file.path.split("/").slice(-2).join("/"); // Simplify the path
-      return `\`\`\`${file.type}\nPath: ${simplifiedPath}\nName: ${file.name}\n\n${file.content}\n\`\`\``;
+      return `\`\`\`${file.type}\nPath: ${file.path}\nName: ${file.name}\n\n${file.content}\n\`\`\``;
     })
     .join("\n\n");
 }
