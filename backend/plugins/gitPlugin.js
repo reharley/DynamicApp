@@ -1,4 +1,4 @@
-const gitP = require("simple-git/promise");
+const gitP = require("simple-git");
 
 class CustomError extends Error {
   constructor(message, status) {

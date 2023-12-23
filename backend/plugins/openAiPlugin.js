@@ -81,7 +81,7 @@ class OpenAIPlugin {
 
           let newMessage = {
             role: "function",
-            name: "get_current_weather",
+            name: functionName,
             content: functionResStr,
           };
 
