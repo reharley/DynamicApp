@@ -62,8 +62,9 @@ const updateObject = async (
   updatedObject: any
 ) => {
   return sendWebServiceRequest("mock", "updateObject", {
+    id,
     type: objectType,
-    data: { ...updatedObject, id },
+    updatedObject: { ...updatedObject, id },
   });
 };
 

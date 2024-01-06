@@ -38,7 +38,7 @@ class MockDatabasePlugin {
     objects.push(newObject);
 
     // Write the updated data back to the file
-    this.writeData(data);
+    this.writeData({data});
 
     // Respond with the new object
     return newObject;
@@ -65,7 +65,7 @@ class MockDatabasePlugin {
     data[type][objectIndex] = { ...data[type][objectIndex], ...updatedObject };
 
     // Write the updated data back to the file
-    this.writeData(data);
+    this.writeData({data});
 
     // Respond with the updated object
     return data[type][objectIndex];
@@ -92,7 +92,7 @@ class MockDatabasePlugin {
     const [deletedObject] = data[type].splice(objectIndex, 1);
 
     // Write the updated data back to the file
-    this.writeData(data);
+    this.writeData({data});
 
     // Respond with the deleted object
     return deletedObject;
