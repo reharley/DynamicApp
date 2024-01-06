@@ -14,11 +14,7 @@ type DynamicFormProps = {
 };
 const DynamicForm = ({ component, appState }: DynamicFormProps) => {
   const [form] = Form.useForm();
-  component.current = form;
-  if (component.current === null && component.onInit)
-    if (appFunctions.initFunctions[component.onInit] === undefined)
-      console.log(`Function ${component.onInit} not found`);
-    else appFunctions.initFunctions[component.onInit](appState, component);
+  component.formInstance = form;
 
   const renderFormItem = (item: Component) => {
     // Switch statement to render form input based on type

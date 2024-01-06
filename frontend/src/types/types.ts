@@ -60,7 +60,8 @@ export interface Component {
   type: string;
   name: string;
   initialized?: boolean;
-  current?: null | HTMLElement | FormInstance;
+  current?: null | HTMLElement;
+  formInstance?: FormInstance;
   objectType?: string;
   objectFormName?: string;
   properties?: any;

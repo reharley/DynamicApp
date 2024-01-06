@@ -303,9 +303,9 @@ export const populateObjectFormOnSelection: onRowClick = (
   if (component.objectFormName === undefined) return;
   const objectForm = appState.getComponent(component.objectFormName);
   console.log("objectForm", objectForm);
-  if (objectForm && objectForm.current) {
+  if (objectForm && objectForm.formInstance) {
     const formattedRecord = initializeDateValuesForForm(objectForm, record);
-    (objectForm.current as FormInstance).setFieldsValue(formattedRecord);
+    objectForm.formInstance.setFieldsValue(formattedRecord);
   } else {
     console.error("Object form or form instance not found");
   }

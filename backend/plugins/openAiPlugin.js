@@ -2,13 +2,11 @@
 const OpenAI = require("openai");
 const MockDatabasePlugin = require("./mockDatabasePlugin");
 const FileSystemPlugin = require("./fsPlugin");
-const GitPlugin = require("./gitPlugin");
 const remoteRepoUrl = "../../Dynamic_App";
 // Initialize plugins
 const plugins = {
   mock: new MockDatabasePlugin(),
   fs: new FileSystemPlugin(remoteRepoUrl),
-  git: new GitPlugin(remoteRepoUrl),
 };
 
 class OpenAIPlugin {

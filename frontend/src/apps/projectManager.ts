@@ -179,16 +179,6 @@ const projectManagerApp: App = {
                   properties: {
                     layout: "vertical",
                     onSubmit: "submitObject",
-                    submitButton: {
-                      type: "Button",
-                      name: "submitProjectButton",
-                      properties: {
-                        type: "primary",
-                        htmlType: "submit",
-                        text: "Submit",
-                        name: "submitButton",
-                      },
-                    },
                   },
                   items: [
                     {
@@ -196,6 +186,7 @@ const projectManagerApp: App = {
                       name: "id",
                       formItemProps: {
                         label: "Project ID",
+                        name: "id",
                         style: { display: "none" },
                       },
                     },
@@ -204,6 +195,7 @@ const projectManagerApp: App = {
                       name: "projectName",
                       formItemProps: {
                         label: "Project Name",
+                        name: "projectName",
                         rules: [
                           {
                             required: true,
@@ -218,6 +210,7 @@ const projectManagerApp: App = {
                       onChange: "updateEndDateRestriction",
                       formItemProps: {
                         label: "Start Date",
+                        name: "startDate",
                         rules: [
                           {
                             required: true,
@@ -231,6 +224,7 @@ const projectManagerApp: App = {
                       name: "endDate",
                       formItemProps: {
                         label: "End Date",
+                        name: "endDate",
                         rules: [
                           {
                             required: true,
@@ -259,6 +253,7 @@ const projectManagerApp: App = {
                         ],
                       },
                       formItemProps: {
+                        name: "status",
                         label: "Status",
                         rules: [
                           {
@@ -273,12 +268,23 @@ const projectManagerApp: App = {
                       name: "description",
                       formItemProps: {
                         label: "Description",
+                        name: "description",
                         rules: [
                           {
                             required: true,
                             message: "Please input the description!",
                           },
                         ],
+                      },
+                    },
+                    {
+                      type: "Button",
+                      name: "submitObjectButton",
+                      properties: {
+                        type: "primary",
+                        htmlType: "submit",
+                        text: "Submit",
+                        name: "submitButton",
                       },
                     },
                   ],
