@@ -105,31 +105,38 @@ class FileSystemPlugin {
       throw new Error(`File not found: ${fullPath}`);
     }
   }
-  insertString({ filePath, content, start, end }) {
+  insertString({ filePath, content, startPattern, endPattern }) {
     const fullPath = path.join(this.basePath, filePath);
 
     if (!fs.existsSync(fullPath)) {
       throw new Error(`File not found: ${fullPath}`);
     }
 
-    const fileContent = fs.readFileSync(fullPath, "utf8");
-    const lines = fileContent.split("\n");
-    const startIndex = lines.findIndex((line) => line.includes(start));
-    const endIndex = lines.findIndex((line) => line.includes(end));
+    let fileContent = fs.readFileSync(fullPath, "utf8");
 
-    if (startIndex === -1 || endIndex === -1) {
-      throw new Error("Start or end line not found");
+    // Create regex objects from the patterns
+    const startRegex = new RegExp(startPattern, "g");
+    const endRegex = new RegExp(endPattern, "g");
+
+    // Find the indices of the start and end patterns
+    const startMatch = startRegex.exec(fileContent);
+    const endMatch = endRegex.exec(fileContent);
+
+    if (!startMatch || !endMatch) {
+      throw new Error("Pattern not found");
     }
+
+    const startIndex = startMatch.index + startMatch[0].length;
+    const endIndex = endMatch.index;
 
     if (startIndex >= endIndex) {
-      throw new Error("End line comes before start line");
+      throw new Error("End pattern comes before start pattern");
     }
 
-    const newContent = [
-      ...lines.slice(0, startIndex + 1),
-      content,
-      ...lines.slice(endIndex),
-    ].join("\n");
+    // Split the content at the start and end indices and insert the new content
+    const beforeStart = fileContent.substring(0, startIndex);
+    const afterEnd = fileContent.substring(endIndex);
+    const newContent = beforeStart + content + afterEnd;
 
     fs.writeFileSync(fullPath, newContent);
   }
