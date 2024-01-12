@@ -126,8 +126,9 @@ export const fileSelectionInit: onInit = async (
     // Flatten the folder structure to get a list of files
     const files = flattenFolderStructure(folderStructure);
 
+    console.log("Files:", files);
     // Update the fileSelectionTable component's dataSource with the files
-    appState.changeComponent("fileSelectionTable", {
+    appState.changeComponent(component.name, {
       dataSource: files,
       columns: fileTableColumns,
     });
@@ -326,9 +327,6 @@ export const onInitMessageListItem: onInit = (
     return;
   }
 
-  const fileSelectionTable = appState.getComponent("fileSelectionTable");
-  console.log("fileSelectionTable", fileSelectionTable);
-
   // Adjust component names based on dataIndex
   const adjustedName = (baseName: string) => `${baseName}_${dataIndex}`;
 
@@ -365,6 +363,14 @@ export const onInitMessageListItem: onInit = (
     appState.changeComponent(messageArgsName, { style: { display: "none" } });
   }
 };
+
+/**
+ * Initializes the message title with data from the message list's dataSource.
+ */
+export const onInitMessageTitle: onInit = (
+  appState: AppState,
+  component: Component
+) => {};
 
 export const formFinishFunctions: Record<string, onFormFinish> = {
   submitObject,

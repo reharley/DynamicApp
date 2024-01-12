@@ -1,5 +1,4 @@
-// utils/AppState.ts
-
+import { Signal, signal } from "@preact/signals";
 import { Location } from "react-router-dom";
 import { App, Component } from "../types/types";
 
@@ -7,82 +6,43 @@ import { App, Component } from "../types/types";
 export default class AppState {
   private app: any;
   private location: any;
-  private setAppState: (app: App) => void;
-  private customViewCache: { [key: string]: any };
-  private componentCache: { [key: string]: Component };
+  private componentCache: { [key: string]: Signal<Component> };
   getCustomView(name: string) {
     return this.app.customViews[name];
   }
   getApp() {
     return this.app;
   }
-  setState(app: App, setAppState: (app: App) => void, location: Location) {
+  setState(app: App, location: Location) {
     this.app = app;
     this.location = location;
-    this.setAppState = setAppState;
   }
-  constructor(app: App, setAppState: (app: App) => void, location: Location) {
-    this.setState(app, setAppState, location);
-    this.customViewCache = {};
+  constructor(app: App, location: Location) {
+    this.setState(app, location);
     this.componentCache = {};
   }
 
-  getComponent(name: string): Component | undefined {
-    // Check if the component is already in the cache
-    if (this.componentCache[name]) {
-      return this.componentCache[name];
-    }
-    // First, search in the main app structure
-    let foundComponent = this._searchComponentByName(name, this.app);
-
-    // If not found in the main app, search in the customViewCache
-    if (!foundComponent) {
-      Object.values(this.customViewCache).forEach((cacheItem) => {
-        const componentInCache = this._searchComponentByName(name, cacheItem);
-        if (componentInCache) {
-          foundComponent = componentInCache;
-          return;
-        }
-      });
-    }
-
-    // Cache the component for future use
-    if (foundComponent) this.componentCache[name] = foundComponent;
-    return foundComponent;
+  /**
+   * Sets a component by name.
+   * @param {object} component - The component to set.
+   */
+  setComponentSignal(component: Component) {
+    if (this.componentCache[component.name])
+      alert("Component already exists: " + component.name);
+    else this.componentCache[component.name] = signal(component);
+    return this.componentCache[component.name];
   }
-  _searchComponentByName(
-    name: string,
-    currentComponent: any
-  ): Component | undefined {
-    if (!currentComponent || typeof currentComponent !== "object") return;
 
-    // Base case: if the component's name matches, return the component
-    if (currentComponent.name === name) {
-      return currentComponent;
-    }
+  /**
+   * Gets a component by name.
+   * @param {string} name - The name of the component to get.
+   */
 
-    const skipKeys = ["dataSource", "current"];
-    // Recursive case: iterate over all properties
-    for (const key in currentComponent) {
-      if (skipKeys.includes(key)) continue;
-      const prop = currentComponent[key];
-
-      // If the property is an object or an array, search recursively
-      if (prop && typeof prop === "object") {
-        let foundComponent;
-
-        if (Array.isArray(prop)) {
-          for (const item of prop) {
-            foundComponent = this._searchComponentByName(name, item);
-            if (foundComponent) return foundComponent;
-          }
-        } else {
-          foundComponent = this._searchComponentByName(name, prop);
-          if (foundComponent) return foundComponent;
-        }
-      }
-    }
-    return;
+  getComponentSignal(name: string): Signal<Component> | undefined {
+    return this.componentCache[name];
+  }
+  getComponent(name: string): Component | undefined {
+    return this.componentCache[name]?.value;
   }
   /**
    * Updates a component's properties by name.
@@ -90,13 +50,16 @@ export default class AppState {
    * @param {object} newProperties - The new properties to set on the component.
    */
   changeComponent(componentName: string, newProperties: any) {
-    const component = this.getComponent(componentName);
-    if (component) {
+    const componentSignal = this.getComponentSignal(componentName);
+    if (componentSignal) {
       // Update the component's properties
-      component.properties = { ...component.properties, ...newProperties };
-
-      // Optionally, you can trigger a state update or any other necessary updates
-      this.setAppState({ ...this.app }); // if setAppState is a method to trigger React state update
+      componentSignal.value = {
+        ...componentSignal.value,
+        properties: {
+          ...componentSignal.value.properties,
+          ...newProperties,
+        },
+      };
 
       return true;
     } else {
@@ -109,18 +72,18 @@ export default class AppState {
     customViewName: string,
     dataItem: any,
     index: number
-  ) {
+  ): Component | undefined {
     // Generate a unique cache key for the custom view instance
     const cacheKey = `${customViewName}_${index}`;
     // Check if the custom view instance is already in the cache
-    if (this.customViewCache[cacheKey]) {
-      return this.customViewCache[cacheKey];
+    if (this.componentCache[cacheKey]) {
+      return this.componentCache[cacheKey].value;
     }
 
     const customViewTemplate = this.app.customViews[customViewName];
     if (!customViewTemplate) {
       console.error(`Custom view "${customViewName}" not found.`);
-      return null;
+      return;
     }
 
     const customViewClone = structuredClone(customViewTemplate);
@@ -135,8 +98,7 @@ export default class AppState {
     this._appendIndexToNames(customViewClone, index);
 
     // Store the new custom view instance in the cache
-    this.customViewCache[cacheKey] = customViewClone;
-
+    // this.componentCache[customViewClone.name] = signal(customViewClone);
     return customViewClone;
   }
 

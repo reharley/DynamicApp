@@ -33,21 +33,28 @@ interface RenderComponentProps {
 }
 const RenderComponent = ({ component, appState }: RenderComponentProps) => {
   const componentRef = useRef(null);
+  console.log("RenderComponent", component.name);
   if (!appState || !component) return <React.Fragment />;
   component.current = componentRef.current;
-  if (component.initialized !== true && component.onInit) {
+  if (component.onInit && component.initialized !== true) {
     component.initialized = true;
     if (appFunctions.initFunctions[component.onInit] === undefined)
       console.log(`Function ${component.onInit} not found`);
     else appFunctions.initFunctions[component.onInit](appState, component);
   }
-  const { type, children } = component;
-  let properties = component.properties ?? {};
+  let tempComp = appState.getComponentSignal(component.name);
+  if (tempComp === undefined) {
+    tempComp = appState.setComponentSignal(component);
+  }
+  if (tempComp === undefined) return <React.Fragment />;
+  const comp = tempComp.value;
+  const { type, children } = comp;
+  let properties = comp.properties ?? {};
 
   const commonProps = {
     ...properties,
     ref: type !== "Form" ? componentRef : undefined,
-    component,
+    component: comp,
     children:
       children &&
       children.map((child) => (
@@ -75,8 +82,8 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
         <Menu
           {...properties}
           items={
-            component.items &&
-            component.items.map((item) => ({
+            comp.items &&
+            comp.items.map((item) => ({
               key: item.properties.key,
               label: (
                 <Link to={item.properties.link}>{item.properties.text}</Link>
@@ -86,7 +93,7 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
         />
       );
     case "Avatar":
-      return <Avatar {...component.properties} />;
+      return <Avatar {...comp.properties} />;
 
     case "Card":
       return <Card {...commonProps} />;
@@ -96,17 +103,14 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
       const onRow = (record: any, rowIndex: number) => {
         return {
           onClick: () => {
-            if (
-              component.properties.onRow &&
-              component.properties.onRow.click
-            ) {
-              const functionName = component.properties.onRow.click;
+            if (comp?.properties.onRow && comp.properties.onRow.click) {
+              const functionName = comp.properties.onRow.click;
               if (appFunctions.rowClickFunctions[functionName]) {
                 appFunctions.rowClickFunctions[functionName](
                   record,
                   rowIndex,
                   appState,
-                  component
+                  comp
                 );
               }
             }
@@ -122,10 +126,10 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
           nativeEvent: any
         ) => {
           if (
-            component.properties.rowSelection &&
-            component.properties.rowSelection.onSelect
+            comp?.properties.rowSelection &&
+            comp.properties.rowSelection.onSelect
           ) {
-            const functionName = component.properties.rowSelection.onSelect;
+            const functionName = comp.properties.rowSelection.onSelect;
             if (appFunctions.rowSelectionSelectFunctions[functionName]) {
               appFunctions.rowSelectionSelectFunctions[functionName](
                 record,
@@ -133,41 +137,40 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
                 selectedRows,
                 nativeEvent,
                 appState,
-                component
+                comp
               );
             }
           }
         },
         onChange: (selectedRowKeys: any[], selectedRows: any[], info: any) => {
-          if (!component.properties) component.properties = {};
-          if (!component.properties.rowSelection)
-            component.properties.rowSelection = {};
+          if (!comp?.properties) comp.properties = {};
+          if (!comp.properties.rowSelection) comp.properties.rowSelection = {};
 
           // Update component properties
-          component.properties.rowSelection = {
-            ...component.properties.rowSelection,
+          comp.properties.rowSelection = {
+            ...comp.properties.rowSelection,
             selectedRowKeys,
             selectedRows,
             info,
           };
 
           if (
-            component.properties.rowSelection &&
-            component.properties.rowSelection.onChange
+            comp.properties.rowSelection &&
+            comp.properties.rowSelection.onChange
           ) {
-            const functionName = component.properties.rowSelection.onChange;
+            const functionName = comp.properties.rowSelection.onChange;
             if (appFunctions.rowSelectionChangeFunctions[functionName]) {
               appFunctions.rowSelectionChangeFunctions[functionName](
                 selectedRowKeys,
                 selectedRows,
                 info,
                 appState,
-                component
+                comp
               );
             }
           } else {
             // component was updated above in the beginning of this function
-            appState.changeComponent(component.name, {});
+            appState.changeComponent(comp.name, {});
           }
         },
       };
@@ -215,7 +218,7 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
     case "PreformattedText":
       return <Markdown {...properties} content={properties.text} />;
     case "string":
-      return component.properties.text;
+      return comp.properties.text;
 
     case "List":
       return (
@@ -224,10 +227,11 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
           renderItem={(item, index) => {
             // Retrieve and interpolate CustomView using its name
             const customViewClone = appState.getCustomViewWithItemData(
-              component.properties.renderItem.properties.viewName,
+              comp.properties.renderItem.properties.viewName,
               item,
               index
             );
+            console.log("customViewClone", index, customViewClone, item);
 
             return (
               <List.Item>
@@ -297,8 +301,8 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
         <Tabs
           {...commonProps}
           items={
-            component.items &&
-            component.items.map((item) => ({
+            comp.items &&
+            comp.items.map((item) => ({
               ...item.properties,
               children: (
                 <>
@@ -321,18 +325,15 @@ const RenderComponent = ({ component, appState }: RenderComponentProps) => {
         <Input.Search
           {...commonProps}
           onSearch={(value) => {
-            if (
-              component.onSearch &&
-              appFunctions.searchFunctions[component.onSearch]
-            ) {
-              appFunctions.searchFunctions[component.onSearch](
+            if (comp.onSearch && appFunctions.searchFunctions[comp.onSearch]) {
+              appFunctions.searchFunctions[comp.onSearch](
                 value,
                 appState,
-                component
+                comp
               );
             } else {
               console.log(
-                `Function ${component.onSearch} not found in appFunctions`
+                `Function ${comp.onSearch} not found in appFunctions`
               );
             }
           }}

@@ -1,5 +1,5 @@
 // chatbot.ts
-import { App } from "../types/types";
+import { App, Component } from "../types/types";
 
 // Define menu items
 const menuItemHome = {
@@ -150,12 +150,23 @@ const mainFooter = {
 };
 
 // Define notification modal
-const notificationModal = {
+const notificationModal: Component = {
   type: "Modal",
   name: "notificationModal",
   properties: {
     title: "Notification",
     content: "Your changes have been saved.",
+  },
+};
+
+const submitButton = {
+  type: "Button",
+  name: "submitObjectButton",
+  properties: {
+    type: "primary",
+    htmlType: "submit",
+    text: "Submit",
+    name: "submitButton",
   },
 };
 // Define components for ProjectsView
@@ -248,16 +259,7 @@ const projectFormItems = [
       ],
     },
   },
-  {
-    type: "Button",
-    name: "submitObjectButton",
-    properties: {
-      type: "primary",
-      htmlType: "submit",
-      text: "Submit",
-      name: "submitButton",
-    },
-  },
+  submitButton,
   // Additional fields can be added as needed
 ];
 
@@ -355,7 +357,7 @@ const rightColumnProjects = {
 
 const mainRowProjects = {
   type: "Row",
-  name: "mainRow",
+  name: "mainProjectsRow",
   properties: {
     gutter: 16,
   },
@@ -365,9 +367,9 @@ const mainRowProjects = {
 // Define ProjectsView
 const ProjectsView = {
   type: "Row",
-  name: "mainRow",
+  name: "projectsViewRow",
   properties: {
-    gutter: 16,
+    gutter: 32,
   },
   children: [mainRowProjects],
 };
@@ -550,7 +552,7 @@ const teamRow = {
 // Define TeamsView
 const TeamsView = {
   type: "Row",
-  name: "teamRow",
+  name: "teamsViewRow",
   properties: {
     gutter: 16,
   },
@@ -716,7 +718,7 @@ const reportsRow = {
 // Define ReportsView
 const ReportsView = {
   type: "Row",
-  name: "reportsRow",
+  name: "reportsViewRow",
   properties: {
     gutter: 16,
   },
